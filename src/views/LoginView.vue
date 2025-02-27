@@ -2,7 +2,7 @@
     <body>
         <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
         <div class="container">
-            <div class="form-box register">
+            <div class="form-box login">
                 <form action="">
                     <h1>Log In</h1>
                     <div class="input-box">
@@ -17,6 +17,9 @@
                         <input type="id" placeholder="Id" required>
                         <i class='bx bxs-id-card'></i>
                     </div>
+                    <div class="forgot-link">
+                        <a href="#">Forgot Password?</a>
+                    </div>
                     <button type="submit" class="btn">Log In</button>
                     <p>or login with social platforms?</p>
                     <div class="social-icons">
@@ -26,6 +29,41 @@
                         <a href="#"><i class='bx bxl-linkedin' ></i></a>
                     </div>
                 </form>
+            </div>
+
+
+            <div class="form-box register">
+                <form action="">
+                    <h1>Registration Form</h1>
+                    <div class="input-box">
+                        <input type="text" placeholder="Username" required>
+                        <i class='bx bxs-user'></i>
+                    </div>
+                    <div class="input-box"> 
+                        <input type="password" placeholder="Password" required>
+                        <i class='bx bxs-lock-alt' ></i>
+                    </div>
+                    <div class="input-box"> 
+                        <input type="id" placeholder="Id" required>
+                        <i class='bx bxs-id-card'></i>
+                    </div>
+                    <button type="submit" class="btn">Register</button>
+                    <p>or register with social platforms?</p>
+                    <div class="social-icons">
+                        <a href="#"><i class='bx bxl-google' ></i></a>
+                        <a href="#"><i class='bx bxl-facebook' ></i></a>
+                        <a href="#"><i class='bx bxl-github' ></i></a>
+                        <a href="#"><i class='bx bxl-linkedin' ></i></a>
+                    </div>
+                </form>
+            </div>
+
+            <div class="toggle-box">
+                <div class="toggle-panel toggle-left">
+                    <h1>Hello, Welcome!</h1>
+                    <p>Sign Up</p>
+                    <button class="btn register-btn">Register</button>
+                </div>
             </div>
         </div>
     </body>
@@ -54,6 +92,7 @@ body {
     background: #fff;
     border-radius: 30px;
     box-shadow: 0 0 30px rgba(0, 0, 0, .2);
+    overflow: hidden;
 }
 
 .form-box {
@@ -61,7 +100,7 @@ body {
     right: 0;
     width: 50%;
     height: 100%;
-    background: seagreen;
+    background: #fff;
     display: flex;
     align-items: center;
     color: #333;
@@ -69,6 +108,9 @@ body {
     padding: 40px;
 }
 
+.form-box.register {
+    visibility: hidden;
+}
 form {
     width: 100%;
 }
@@ -114,6 +156,9 @@ form {
     text-decoration: none;
 }
 
+.forgot-link a{
+    text-decoration: none;
+}
 .btn  {
     width: 100%;
     height: 48px;
@@ -141,5 +186,46 @@ form {
     color: #333;
     text-decoration: none;
     margin: 0 8px;
+}
+
+.toggle-box {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.toggle-box::before {
+    content: '';
+    position: absolute;
+    left: -250%;
+    width: 300%;
+    height: 100%;
+    background: #7494ec;
+    border-radius: 150px;
+    z-index: 2;
+}
+
+.toggle-panel {
+    position: absolute;
+    width: 50%;
+    height: 100%;
+    /* background: seagreen; */
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.toggle-panel p {
+    margin-bottom: 20px;
+}
+
+.toggle-panel .btn {
+    width: 160px;
+    height: 46px;
+    background: transparent;
+    border: 2px solid #fff;
+    box-shadow: none;
 }
 </style>
