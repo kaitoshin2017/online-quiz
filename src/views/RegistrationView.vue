@@ -84,11 +84,28 @@
     padding: 20px;
     border: 1px solid #ccc;
     display: flex; 
+    font-family: Arial, sans-serif;
+   align-items: center;
   }
+
+
   
   .right-column {
     flex: 1;
     padding: 10px;
-  }
-  </style>
   
+  }
+
+  button{
+   margin-top: 10px
+  
+  }
+  
+  label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 18px;
+  color: #333;
+}
+
+  </style>
