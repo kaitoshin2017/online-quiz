@@ -64,6 +64,11 @@
                     <p>Sign Up</p>
                     <button class="btn register-btn">Register</button>
                 </div>
+                <div class="toggle-panel toggle-right">
+                    <h1>Welcome Back!</h1>
+                    <p>Already have an account?</p>
+                    <button class="btn login-btn">Log In</button>
+                </div>
             </div>
         </div>
     </body>
@@ -92,7 +97,7 @@ body {
     background: #fff;
     border-radius: 30px;
     box-shadow: 0 0 30px rgba(0, 0, 0, .2);
-    overflow: hidden;
+    /* overflow: hidden; */
 }
 
 .form-box {
@@ -159,6 +164,7 @@ form {
 .forgot-link a{
     text-decoration: none;
 }
+
 .btn  {
     width: 100%;
     height: 48px;
@@ -205,16 +211,24 @@ form {
     z-index: 2;
 }
 
+.container.active .toggle-box::before {
+    left: 50%;
+}
+
 .toggle-panel {
     position: absolute;
     width: 50%;
     height: 100%;
-    /* background: seagreen; */
     color: #fff;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    z-index: 2;
+}
+
+.toggle-panel.toggle-right {
+    right: -50%;
 }
 
 .toggle-panel p {
@@ -229,3 +243,17 @@ form {
     box-shadow: none;
 }
 </style>
+
+<script>
+const container = document.querySelector('.container');
+const registerBtn = document.querySelector('.register-btn');
+const loginBtn = document.querySelector('.login-btn');
+
+loginBtn.addEventListener('click', () => {
+    container.classList.add('active');
+});
+
+registerBtn.addEventListener('click', () => {
+    container.classList.remove('active');
+});
+</script>
