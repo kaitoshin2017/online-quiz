@@ -209,6 +209,7 @@ form {
     background: #7494ec;
     border-radius: 150px;
     z-index: 2;
+    transition: 1.8s ease-in-out;
 }
 
 .container.active .toggle-box::before {
