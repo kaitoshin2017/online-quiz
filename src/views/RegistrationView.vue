@@ -1,23 +1,16 @@
 <template>
     <div class="container">
+    
         <div>
         <p>It always seems impossible until it's done.</p>
-      </div>
-
+        </div>
+         
       <div class="right-column">
-        <h2>Sign up</h2>
-        <form @submit.prevent="submitForm">
-          <div>
+          <section>
+            <div>
+              <h1>Sign</h1>
             <label for="firstName">First Name:</label>
             <input type="text" id="firstName" v-model="firstName">
-          </div>
-          <div>
-            <label for="lastName">Last Name:</label>
-            <input type="text" id="lastName" v-model="lastName">
-          </div>
-          <div>
-            <label for="section">Section:</label>
-            <input type="text" id="section" v-model="section">
           </div>
           <div>
             <label for="username">Username:</label>
@@ -27,6 +20,18 @@
             <label for="password">Password:</label>
             <input type="password" id="password" v-model="password">
           </div>
+          <button type="submit">Submit</button>
+          </section>
+          <section class="sec2">
+            <h2>Up</h2>
+            <div>
+            <label for="lastName">Last Name:</label>
+            <input type="text" id="lastName" v-model="lastName">
+          </div>
+          <div>
+            <label for="section">Section/id:</label>
+            <input type="text" id="section" v-model="section">
+          </div>
           <div>
             <label for="confirmPassword">Confirm Password:</label>
             <input type="password" id="confirmPassword" v-model="confirmPassword">
@@ -34,9 +39,10 @@
           <div v-if="password !== confirmPassword">
             <p style="color:red;">Passwords do not match!</p>
           </div>
-          <button type="submit">Submit</button>
-        </form>
+          </section>
+        
       </div>
+    
     </div>
   </template>
   
@@ -77,35 +83,91 @@
   </script>
   
   <style scoped>
-  
-  .container {
-    width: 500px;
-    margin: 0 auto;
-    padding: 20px;
-    border: 1px solid #ccc;
-    display: flex; 
+  *{
     font-family: Arial, sans-serif;
-   align-items: center;
+    text-align: center;
+  }
+  
+   .container {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    height: 90dvh;
+    justify-content: center;
+    align-items: center;
+    padding: 32px 48px;
+  }
+  p{
+    padding-right: 20px
+    
+  }
+  h1 {
+    color: #00698f;
+    padding-left: 78%;
+    
+  }
+  h2 {
+    color: #00698f;
+    padding-right: 1000%;
+    
   }
 
-
+  section{
+    margin-left: 3%;
+  }
+ .sec2{
   
-  .right-column {
-    flex: 1;
+  margin-right: 3%;
+ }
+  .right-column{
+    background-color: #ccc;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+    height: 50%;
+    border-radius: 20px;
+  }
+ 
+  label{
+    display: block;
+    margin-bottom: 10px;
+    font-size: 18px;
+    color: #333;
+  }
+  input[type="text"], input[type="password"]{
+    width: 90%;
+    height: 10px;
+    margin-bottom: 8px;
     padding: 10px;
-  
+    border: 1px solid #ccc;
+    border-radius: 10px;
   }
 
-  button{
-   margin-top: 10px
-  
+  input[type="submit"]{
+    width: 100%;
+    height: 40px;
+    background-color: #4CAF50;
+    color: #fff;
+    padding: 10px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
   }
-  
-  label {
-  display: block;
-  margin-bottom: 10px;
-  font-size: 18px;
-  color: #333;
-}
+  input[type=submit]:hover{
+    background-color: #3e8e41;
+  }
+  button{
+    background-color: #3b5998;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    width: 50%;
+    margin-top: 5%;
+  }
+
+
+   
 
   </style>
