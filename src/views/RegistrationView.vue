@@ -2,7 +2,7 @@
     <div class="container">
         <div>
         <p>It always seems impossible until it's done.</p>
-      </div>
+        </div>
 
       <div class="right-column">
         <h2>Sign up</h2>
@@ -87,18 +87,21 @@
     font-family: Arial, sans-serif;
    align-items: center;
   }
+   height: 60dvh;
 
+  }
 
+  p{
+    padding-right: 20px
+  }
   
   .right-column {
     flex: 1;
     padding: 10px;
-  
   }
 
   button{
    margin-top: 10px
-  
   }
   
   label {
