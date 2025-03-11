@@ -75,59 +75,48 @@
   </div>
 </template>
 
-<style scoped>
-.input-field {
-  @apply border rounded-lg p-2 w-full;
-}
-.btn-register {
-  @apply bg-red-700 text-white p-2 rounded-lg w-40;
-}
-.btn-cancel {
-  @apply border border-red-700 text-red-700 p-2 rounded-lg w-40;
-}
-</style>
+
 
 <script>
-import { ref } from "vue";
+// import { ref } from "vue";
 
-export default {
-  setup() {
-    const firstName = ref("");
-    const middleName = ref("");
-    const lastName = ref("");
-    const gender = ref("");
-    const dob = ref("");
-    const username = ref("");
-    const password = ref("");
-    const confirmPassword = ref("");
-    const showPassword = ref(false);
-    const profilePicture = ref(null);
+// export default {
+//   setup() {
+//     const firstName = ref("");
+//     const middleName = ref("");
+//     const lastName = ref("");
+//     const gender = ref("");
+//     const dob = ref("");
+//     const username = ref("");
+//     const password = ref("");
+//     const confirmPassword = ref("");
+//     const showPassword = ref(false);
+//     const profilePicture = ref(null);
 
-    const onImageChange = (event) => {
-      const file = event.target.files[0];
-      if (file) {
-        profilePicture.value = URL.createObjectURL(file);
-      }
-    };
+//     const onImageChange = (event) => {
+//       const file = event.target.files[0];
+//       if (file) {
+//         profilePicture.value = URL.createObjectURL(file);
+//       }
+//     };
 
-    const registerUser = () => {
-      alert(Registered: ${firstName.value} ${lastName.value});
-    };
+//     const registerUser = () => {
+//       alert(Registered: ${firstName.value} ${lastName.value});
+//     };
 
-    return {
-      firstName, middleName, lastName, gender, dob,
-      username, password, confirmPassword, showPassword,
-      profilePicture, onImageChange, registerUser
-    };
-  },
-};
+//     return {
+//       firstName, middleName, lastName, gender, dob,
+//       username, password, confirmPassword, showPassword,
+//       profilePicture, onImageChange, registerUser
+//     };
+//   },
+// };
 </script>
-
-<!-- <style scoped>
+<style scoped>
 * {
   font-family: Arial, sans-serif;
   text-align: center;
-} -->
+}
 
 /* body {
   display: flex;
@@ -229,4 +218,4 @@ button {
   font-size: 20px;
   color: #333;
 } */
-<!-- </style> -->
+</style>
