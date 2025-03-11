@@ -1,132 +1,125 @@
 <template>
-    <body>
-  <div class="container">
-        <!-- Login Form -->
-        <div class="form-section">
-            <h2>Login</h2>
-            <form onsubmit="validateForm(event)">
-                <div>
-                    <label>Username</label>
-                    <input type="text" id="username">
-                </div>
-                <div>
-                    <label>ID</label>
-                    <input type="text" id="userId">
-                </div>
-                <div>
-                    <label>Password</label>
-                    <input type="password" id="password">
-                </div>
-                <button type="submit">Login</button>
-            </form>
+<body>
+    <div class="container">
+        <div class="login-box">
+            <h2>Online Quiz</h2>
+            <!-- <p>Quiz System</p> -->
+            <h3>LOG IN</h3>
+            <div class="input-group">
+                <input type="text" placeholder="Username">
+            </div>
+            <div class="input-group">
+                <input type="password" id="password" placeholder="Password">
+                <!-- <label><input type="checkbox" onclick="togglePassword()">Show Password</label> -->
+            </div>
+            <button class="btn">LOG IN</button>
+            <button class="btn btn-outline">ADMIN</button>
+            <p>Don't have an account? <a href="#">Sign up now!</a></p>
+            <!-- <p>&copy; 2025</p> -->
         </div>
-        
-        <!-- Quote Section -->
-        <div class="quote-section">
-            <p>“Anything worth having takes time.”</p>
-        </div>
+        <!-- <div class="image-box">
+            <img src="OIP.jpg" alt="POS System" width="250">
+        </div> -->
     </div>
 </body>
 </template>
 
 <style>
-body{
 
-display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    background-color: #ffe4e6;
-    font-family: Arial, sans-serif;
-    margin: 0;
-}
-
-/* Container */
-.container {
-    display: flex;
-    background: white;
-    border-radius: 16px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-    max-width: 600px;
-    width: 100%;
-    overflow: hidden;
-}
-
-/* Login Form Section */
-.form-section {
-    width: 50%;
-    padding: 30px;
-}
-
-h2 {
-    color: #db2777;
-    font-size: 24px;
-    margin-bottom: 15px;
-}
-
-label {
-    display: block;
-    margin-bottom: 5px;
-    color: #444;
-}
-
-input {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    margin-bottom: 10px;
-    outline: none;
-    transition: 0.3s;
-}
-
-input:focus {
-    border-color: #db2777;
-    box-shadow: 0 0 5px rgba(219, 39, 119, 0.5);
-}
-
-button {
-    width: 100%;
-    background: #ec4899;
-    color: white;
-    padding: 10px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: 0.3s;
-}
-
-button:hover {
-    background: #db2777;
-}
-
-/* Quote Section */
-.quote-section {
-    width: 50%;
-    background: #fbcfe8;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-    text-align: center;
-    font-style: italic;
-    color: #831843;
-    font-size: 18px;
-}
+body {
+            background-color: #8B0000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            background: white;
+            width: 800px;
+            padding: 20px;
+            border-radius: 15px;
+            display: flex;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .login-box {
+            flex: 1;
+            padding: 20px;
+        }
+        .login-box h2 {
+            margin-bottom: 10px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .input-group input {
+            width: 97%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 2px;
+        }
+        .input-group label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background: #8B0000;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        .btn-outline {
+            background: none;
+            border: 2px solid #8B0000;
+            color: #8B0000;
+        }
+        .btn:hover {
+            opacity: 0.8;
+        }
+        /* .image-box {
+            flex: 1;
+            background: #F4A9A1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 10px;
+        } */
+         p{
+           padding-left: 232px;
+         }
 </style>
+
+
 <script>
+
+        // function togglePassword() {
+        //     var password = document.getElementById("password");
+        //     password.type = password.type === "password" ? "text" : "password";
+        // }
+   
         function validateForm(event) {
             event.preventDefault();
             
             const username = document.getElementById("username").value.trim();
-            const userId = document.getElementById("userId").value.trim();
             const password = document.getElementById("password").value.trim();
             
-            if (username === "" || userId === "" || password === "") {
+            if (username === "" || password === "") {
                 alert("All fields are required!");
                 return;
             }
             
             alert("Login successful!");
-        };
+        }
+
+        function adminLogin() {
+            alert("Redirecting to admin login...");
+            // You can add logic here to redirect to an admin page
+        }
 </script>
