@@ -3,7 +3,7 @@
     <div class="left-panel">
       <section>
         <img v-if="avatar" :src="URL.createObjectURL(avatar)" class="avatar" alt="User Avatar" />
-        <img v-else src="default-avatar.png" class="avatar" alt="Default Avatar" /> <!-- Default avatar -->
+        <img v-else :src="require('@/assets/default-avatar.png')" class="avatar" alt="Default Avatar" /> <!-- Default avatar -->
         <h2>Let's get you set up</h2>
         <p>It's quick and easy.</p>
         <button class="next-btn" @click="goToNextStep">➡</button>
@@ -31,15 +31,15 @@
     <div class="right-panel">
       <div class="form-group">
         <label>Profile Image:</label>
-        <input type="file" @change="handleImageUpload" id="imageUpload" />
+        <input ref="imageInput" type="file" @change="handleImageUpload" id="imageUpload" />
         <label for="imageUpload" class="file-btn">Select Image</label>
       </div>
 
       <div class="input-row">
         <input v-model="form.username" type="text" placeholder="Username" required />
-        <input v-model="form.section" type="section" placeholder="Section" required />
-        <input v-model="form.password" type="password" id="password" placeholder="Password" required />
-        <input v-model="form.confirmPassword" type="password" id="confirmPassword" placeholder="Confirm P.W." />
+        <input v-model="form.section" type="text" placeholder="Section" required />
+        <input :type="showPassword ? 'text' : 'password'" v-model="form.password" id="password" placeholder="Password" required />
+        <input :type="showPassword ? 'text' : 'password'" v-model="form.confirmPassword" id="confirmPassword" placeholder="Confirm P.W." />
       </div>
 
       <div class="show-pass">
@@ -62,7 +62,6 @@ import { ref, reactive } from "vue";
 
 export default {
   setup() {
-    // Define reactive state
     const form = reactive({
       firstName: '',
       lastName: '',
@@ -72,11 +71,10 @@ export default {
       password: '',
       confirmPassword: ''
     });
-    
+
     const showPassword = ref(false);
     const avatar = ref(null);
 
-    // Methods
     const goToNextStep = () => {
       console.log("Next step");
     };
@@ -94,17 +92,12 @@ export default {
         return;
       }
 
-      // Optionally, add more validations for other fields if necessary
       if (!form.firstName || !form.lastName || !form.username) {
         alert("Please fill out all required fields.");
         return;
       }
 
       console.log("Form submitted:", form);
-
-      // Optionally handle avatar upload logic here (e.g., upload to server)
-
-      // Reset form
       resetForm();
     };
 
@@ -124,14 +117,12 @@ export default {
       showPassword.value = false;
       avatar.value = null;
 
-      // Manually reset the file input
-      const fileInput = document.getElementById("imageUpload");
-      if (fileInput) {
-        fileInput.value = '';  // Clear file input
+      const imageInput = document.getElementById("imageUpload");
+      if (imageInput) {
+        imageInput.value = '';
       }
     };
 
-    // Return state and methods for use in template
     return {
       form,
       showPassword,
@@ -145,10 +136,9 @@ export default {
 };
 </script>
 
-
-
-
-
+<style scoped>
+/* Same styling as before */
+</style>
 
 
 <style scoped>
@@ -203,15 +193,10 @@ button.next-btn {
   border-radius: 4px;
 }
 
-.right-panel {
-  /* No need to set width here, as it's defined by the grid layout */
-}
-
 input[type="text"],
-input[type="section"],
 input[type="password"],
 input[type="date"],
-input[type="file"] {
+input[type="file"]{
   width: 100%;
   padding: 10px;
   margin: 10px 0;
@@ -256,3 +241,4 @@ button:disabled {
   text-decoration: none;
 }
 </style>
+
