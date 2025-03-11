@@ -8,10 +8,10 @@
 
       <!-- Navbar Links -->
       <ul class="nav-links" :class="{ active: menuActive }">
-        <li><a href="#">Home</a></li>
-        <li><a href="#">About</a></li>
-        <li><a href="#">FAQ</a></li>
-        <li><a href="#">Login</a></li>
+        <li><a href="AboutView.vue">Home</a></li>
+        <li><a href="LoginView.vue">About</a></li>
+        <li><a href="FAQView.vue">FAQ</a></li>
+        <li><a href="LoginView.vue">Login</a></li>
         <li><a href="#">Sign up</a></li>
 
       </ul>
@@ -49,7 +49,7 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #313131;
+  background-color:  #0A0F1F;
   height: 70px;
   padding: 10px 20px;
 }
@@ -79,7 +79,7 @@ export default {
 }
 
 .navbar .nav-links li a:hover {
-  color: cyan;
+  color: #8B0000;
 }
 
 .burger {
@@ -105,7 +105,7 @@ export default {
     position: absolute;
     top: 50px;
     left: 0;
-    background-color: #333;
+    background-color:  #8B0000;
     text-align: center;
   }
 
