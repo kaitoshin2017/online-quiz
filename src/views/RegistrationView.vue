@@ -2,7 +2,7 @@
   <div class="container">
     <!-- Left Side Panel -->
     <div class="left-panel">
-      <img src="avatar.png" class="avatar" alt="User Avatar">
+      <img v-if="avatar" :src="URL.createObjectURL(avatar)" class="avatar" alt="User Avatar">
       <h2>Let's get you set up</h2>
       <p>It's quick and easy.</p>
       <button class="next-btn" @click="goToNextStep">➡</button>
@@ -86,9 +86,10 @@ export default {
       // Implement next step logic (e.g., showing another form or saving data)
     },
     handleImageUpload(event) {
-      this.avatar = event.target.files[0];
-      console.log('Selected image: ', this.avatar);
-      // Implement image handling logic if needed
+      const file = event.target.files[0];
+      if (file) {
+        this.avatar = file;
+      }
     },
     handleSubmit() {
       if (this.form.password !== this.form.confirmPassword) {
@@ -117,119 +118,115 @@ export default {
         confirmPassword: ''
       };
       this.showPassword = false;
+      this.avatar = null; // Clear avatar
     }
   }
 };
 </script>
 
 <style scoped>
-/* Add your CSS styles here */
-</style>
-
-<style scoped>
+/* General styles for layout */
 * {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
   font-family: Arial, sans-serif;
-  text-align: center;
 }
 
-/* body {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  background-color: #0A0F1F;
-}
-
+/* Container for the form */
 .container {
   max-width: 900px;
   margin: 0 auto;
   display: flex;
-  height: 50dvh;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
   padding: 32px 48px;
-  background: #fff;
+  background-color: #fff;
   box-shadow: 0 0 30px rgba(0, 0, 0, .2);
 }
 
-h3 {
-  padding-right: 100px;
-  font-family: sans-serif;
-  font-weight: 20px;
-  font-size: 30px;
+/* Left panel with image */
+.left-panel {
+  width: 35%;
+  text-align: center;
 }
 
-h1 {
-  color: #00698f;
-  padding-left: 69%;
+.avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  margin-bottom: 16px;
 }
 
 h2 {
   color: #00698f;
-  padding-right: 90%;
 }
 
-section {
-  margin-left: 3%;
-}
-
-.sec2 {
-  margin-right: 3%;
-}
-
-.right-column {
-  background-color: #ccc;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  width: 100%;
-  height: 90%;
-  border-radius: 20px;
-}
-
-label {
-  display: block;
-  margin-bottom: 10px;
-  font-size: 18px;
-  color: #333;
-}
-
-input[type="text"],
-input[type="password"] {
-  width: 90%;
-  height: 10px;
-  margin-bottom: 8px;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 10px;
-  outline: 20px;
-  border: 1px solid black;
-  color: #888;
-}
-
-button {
-  width: 100%;
-  height: 48px;
-  background: #7494ec;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, .1);
+button.next-btn {
+  background-color: #7494ec;
   border: none;
+  padding: 10px 20px;
+  color: white;
   cursor: pointer;
   font-size: 16px;
-  color: #fff;
-  font-weight: 600;
+  border-radius: 4px;
 }
 
-.password-input {
-  position: relative;
+.right-panel {
+  width: 60%;
+  padding: 16px;
 }
 
-.password-icon {
-  position: absolute;
-  top: 50%;
-  right: 10px;
-  transform: translateY(-50%);
+/* Form Inputs */
+input[type="text"],
+input[type="password"],
+input[type="date"],
+input[type="file"] {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+/* Buttons */
+button {
+  background-color: #7494ec;
+  padding: 12px;
+  width: 100%;
+  color: white;
+  border-radius: 8px;
+  border: none;
+  font-size: 16px;
   cursor: pointer;
-  font-size: 20px;
-  color: #333;
-} */
+}
+
+button:disabled {
+  background-color: #ddd;
+  cursor: not-allowed;
+}
+
+/* Password show checkbox */
+.show-pass {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+}
+
+/* Cancel button */
+.cancel-btn {
+  background-color: #f44336;
+  margin-top: 10px;
+}
+
+/* Login link */
+.login-text {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.login-text a {
+  color: #00698f;
+  text-decoration: none;
+}
 </style>
