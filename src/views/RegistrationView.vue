@@ -1,126 +1,135 @@
 <template>
-  <link rel="stylesheet" href="boxicons.min.css">
-  <body>
-    <div class="container">
-      <div>
-        <h3>"It always seems impossible until it's done."</h3>
+  <div class="flex h-screen bg-red-800 text-white">
+    <!-- Left Side (Welcome Section) -->
+    <div class="w-1/3 flex flex-col items-center justify-center bg-red-700 p-10">
+      <div class="bg-white p-2 rounded-full">
+        <img src="@/assets/profile-placeholder.png" alt="Profile" class="w-24 h-24 rounded-full">
       </div>
-      <div class="right-column">
-        <section>
-          <div>
-            <h1>Sign</h1>
-            <label for="firstName">First Name:</label>
-            <input type="text" id="firstName" v-model="firstName">
-          </div>
-          <div>
-            <label for="username">Username:</label>
-            <input type="text" id="username" v-model="username">
-          </div>
-          <div>
-            <label for="password">Password:</label>
-            <div class="password-input">
-              <input 
-                :type="passwordVisible ? 'text' : 'password'" 
-                id="password" 
-                v-model="password"
-              >
-              <i 
-                :class="passwordVisible ? 'bx bxs-hide' : 'bx bxs-show'" 
-                @click="togglePasswordVisibility('password')"
-                class="password-icon"
-              ></i>
-            </div>
-          </div>
-          <button type="submit">Submit</button>
-        </section>
-        <section class="sec2">
-          <h2>Up</h2>
-          <div>
-            <label for="lastName">Last Name:</label>
-            <input type="text" id="lastName" v-model="lastName">
-          </div>
-          <div>
-            <label for="section">Section/id:</label>
-            <input type="text" id="section" v-model="section">
-          </div>
-          <div>
-            <label for="confirmPassword">Confirm Password:</label>
-            <div class="password-input">
-              <input 
-                :type="confirmPasswordVisible ? 'text' : 'password'" 
-                id="confirmPassword" 
-                v-model="confirmPassword"
-              >
-              <i 
-                :class="confirmPasswordVisible ? 'bx bxs-hide' : 'bx bxs-show'" 
-                @click="togglePasswordVisibility('confirmPassword')"
-                class="password-icon"
-              ></i>
-            </div>
-          </div>
-          <div v-if="password !== confirmPassword">
-            <p style="color:red;">Passwords do not match!</p>
-          </div>
-        </section>
-      </div>
+      <h2 class="text-2xl font-bold mt-4">Let's get you set up</h2>
+      <p class="text-sm text-gray-300">It's quick and easy.</p>
+      <button class="mt-4 bg-white text-red-700 p-2 rounded-full">
+        ➜
+      </button>
     </div>
-  </body>
+
+    <!-- Right Side (Form Section) -->
+    <div class="w-2/3 bg-white text-black p-10 rounded-lg">
+      <div class="flex justify-between">
+        <span class="text-gray-600">ID: <strong>3</strong></span>
+        <div>
+          <button class="text-red-600">Go back</button> |
+          <button class="text-gray-600">Minimize</button> |
+          <button class="text-red-600">Close</button>
+        </div>
+      </div>
+
+      <!-- Form -->
+      <form @submit.prevent="registerUser" class="mt-4">
+        <div class="grid grid-cols-2 gap-4">
+          <input v-model="firstName" type="text" placeholder="First Name" class="input-field">
+          <input v-model="middleName" type="text" placeholder="Middle Name" class="input-field">
+          <input v-model="lastName" type="text" placeholder="Last Name" class="input-field">
+          <div class="flex items-center gap-2">
+            <label>Gender:</label>
+            <input type="radio" id="male" value="Male" v-model="gender">
+            <label for="male">Male</label>
+            <input type="radio" id="female" value="Female" v-model="gender">
+            <label for="female">Female</label>
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <label>Date of Birth:</label>
+          <input v-model="dob" type="date" class="input-field w-full">
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mt-4">
+          <div>
+            <label class="block">Profile Picture:</label>
+            <input type="file" @change="onImageChange" class="input-field">
+          </div>
+          <div>
+            <img v-if="profilePicture" :src="profilePicture" class="w-16 h-16 rounded-full">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mt-4">
+          <input v-model="username" type="text" placeholder="Username" class="input-field">
+          <input v-model="password" type="password" placeholder="Password" class="input-field">
+          <input v-model="confirmPassword" type="password" placeholder="Confirm PW" class="input-field">
+          <label class="flex items-center">
+            <input type="checkbox" v-model="showPassword"> Show Password
+          </label>
+        </div>
+
+        <div class="flex justify-between mt-6">
+          <button type="button" class="btn-cancel">CANCEL</button>
+          <button type="submit" class="btn-register">Register</button>
+        </div>
+      </form>
+
+      <p class="mt-4 text-center text-sm">
+        Already have an account? <a href="#" class="text-red-600">Login</a>
+      </p>
+    </div>
+  </div>
 </template>
 
-
+<style scoped>
+.input-field {
+  @apply border rounded-lg p-2 w-full;
+}
+.btn-register {
+  @apply bg-red-700 text-white p-2 rounded-lg w-40;
+}
+.btn-cancel {
+  @apply border border-red-700 text-red-700 p-2 rounded-lg w-40;
+}
+</style>
 
 <script>
+import { ref } from "vue";
+
 export default {
-  data() {
-    return {
-      firstName: '',
-      lastName: '',
-      section: '',
-      username: '',
-      password: '',
-      confirmPassword: '',
-      passwordVisible: false,
-      confirmPasswordVisible: false,
+  setup() {
+    const firstName = ref("");
+    const middleName = ref("");
+    const lastName = ref("");
+    const gender = ref("");
+    const dob = ref("");
+    const username = ref("");
+    const password = ref("");
+    const confirmPassword = ref("");
+    const showPassword = ref(false);
+    const profilePicture = ref(null);
+
+    const onImageChange = (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        profilePicture.value = URL.createObjectURL(file);
+      }
     };
-  },
-  methods: {
-    togglePasswordVisibility(field) {
-      if (field === 'password') {
-        this.passwordVisible = !this.passwordVisible;
-      } else if (field === 'confirmPassword') {
-        this.confirmPasswordVisible = !this.confirmPasswordVisible;
-      }
-    },
-    submitForm() {
-      if (this.password !== this.confirmPassword) {
-        return; 
-      }
-    
-      console.log('Form submitted:', {
-        firstName: this.firstName,
-        lastName: this.lastName,
-        section: this.section,
-        username: this.username,
-        password: this.password, 
-      }); 
-      this.firstName = '';
-      this.lastName = '';
-      this.section = '';
-      this.username = '';
-      this.password = '';
-      this.confirmPassword = '';
-    },
+
+    const registerUser = () => {
+      alert(Registered: ${firstName.value} ${lastName.value});
+    };
+
+    return {
+      firstName, middleName, lastName, gender, dob,
+      username, password, confirmPassword, showPassword,
+      profilePicture, onImageChange, registerUser
+    };
   },
 };
 </script>
 
-<style scoped>
+<!-- <style scoped>
 * {
   font-family: Arial, sans-serif;
   text-align: center;
-}
+} -->
 
-body {
+/* body {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -219,5 +228,5 @@ button {
   cursor: pointer;
   font-size: 20px;
   color: #333;
-}
-</style>
+} */
+<!-- </style> -->
