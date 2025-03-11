@@ -1,22 +1,22 @@
 <template>
   <div id="app">
     <nav class="navbar">
-      <!-- Logo -->
+      
       <div class="logo">
         <a href="#">Online Quiz</a>
       </div>
 
-      <!-- Navbar Links -->
+      
       <ul class="nav-links" :class="{ active: menuActive }">
         <li><a href="AboutView.vue">Home</a></li>
         <li><a href="LoginView.vue">About</a></li>
         <li><a href="FAQView.vue">FAQ</a></li>
         <li><a href="LoginView.vue">Login</a></li>
-        <li><a href="#">Sign up</a></li>
+        <li><a href="Sign up.vue">Sign up</a></li>
 
       </ul>
 
-      <!-- Hamburger Menu Icon -->
+      
       <div class="burger" @click="toggleMenu">
         <div class="line"></div>
         <div class="line"></div>
@@ -31,12 +31,12 @@ export default {
   name: 'App',
   data() {
     return {
-      menuActive: false, // To toggle the menu on mobile
+      menuActive: false, 
     };
   },
   methods: {
     toggleMenu() {
-      this.menuActive = !this.menuActive; // Toggle active class
+      this.menuActive = !this.menuActive; 
     },
   },
 };
@@ -44,21 +44,30 @@ export default {
 
 <style scoped>
 
+template{
+      margin: 0;
+      padding: 0;
+    
+  
+      background-color: #0A0F1F;
+    }
 
 .navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color:  #0A0F1F;
-  height: 70px;
-  padding: 10px 20px;
+  position: fixed;
+  width: 100%;
+  background-color: rgba(255, 255, 255, 0.685); 
+  backdrop-filter: blur(10px);
 }
 
 
 .navbar .logo a {
-  color: rgb(255, 255, 255);
+  color: rgb(0, 0, 0);
   font-size: 24px;
   font-weight: bold;
+  padding-left: 10px;
   text-decoration: none;
 }
 
@@ -73,28 +82,32 @@ export default {
 }
 
 .navbar .nav-links li a {
-  color: white;
+  color: rgb(0, 0, 0);
   text-decoration: none;
   font-size: 18px;
+  padding-right: 10px;
 }
 
 .navbar .nav-links li a:hover {
-  color: #8B0000;
+  color: #b97a7a;
 }
 
 .burger {
   display: none;
   flex-direction: column;
+
   justify-content: space-between;
   width: 30px;
   height: 21px;
+  padding-right: 15px;
   cursor: pointer;
+  padding-left: 30%;
 }
 
 .burger .line {
-  width: 100%;
+  width: 90%;
   height: 3px;
-  background-color: white;
+  background-color: rgb(0, 0, 0);
 }
 
 @media screen and (max-width: 768px) {
@@ -103,9 +116,10 @@ export default {
     width: 100%;
     flex-direction: column;
     position: absolute;
+    padding-left: 9px;
     top: 50px;
     left: 0;
-    background-color:  #8B0000;
+    background-color:  #ffffff;
     text-align: center;
   }
 
@@ -122,4 +136,8 @@ export default {
     display: flex;
   }
 }
+.a{
+  color: #1cff3a;
+}
+
 </style>
