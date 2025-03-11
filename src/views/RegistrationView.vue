@@ -77,8 +77,8 @@ export default {
       username: '',
       password: '',
       confirmPassword: '',
-      passwordVisible: false, // for toggling password visibility
-      confirmPasswordVisible: false, // for toggling confirm password visibility
+      passwordVisible: false,
+      confirmPasswordVisible: false,
     };
   },
   methods: {
@@ -130,11 +130,12 @@ body {
   max-width: 900px;
   margin: 0 auto;
   display: flex;
-  height: 90dvh;
+  height: 50dvh;
   justify-content: center;
   align-items: center;
   padding: 32px 48px;
   background: #fff;
+  box-shadow: 0 0 30px rgba(0, 0, 0, .2);
 }
 
 h3 {
@@ -166,7 +167,7 @@ section {
   display: grid;
   grid-template-columns: 1fr 1fr;
   width: 100%;
-  height: 50%;
+  height: 90%;
   border-radius: 20px;
 }
 
@@ -186,7 +187,8 @@ input[type="password"] {
   border: 1px solid #ccc;
   border-radius: 10px;
   outline: 20px;
-  border: 1.2px solid #3e8e41;
+  border: 1px solid black;
+  color: #888;
 }
 
 button {
