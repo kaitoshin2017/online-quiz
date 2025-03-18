@@ -1,5 +1,6 @@
 <template>
   <div id="app">
+    <!-- Header Section -->
     <header>
       <nav>
         <div class="logo">
@@ -15,11 +16,12 @@
       </nav>
     </header>
 
+    <!-- Main Content -->
     <main>
       <section id="home">
-        <h1>Welcome to the Online Quiz System</h1>
+        <h1>Welcome to the Online Quiz System 🎯</h1>
         <p>Test your knowledge with our fun and engaging quizzes!</p>
-        <h1>Lorem, ipsum dolor sit amet consectetur adipisicing elit. Accusamus praesentium ut eaque quasi laborum omnis nisi sit explicabo, esse debitis atque itaque culpa amet mollitia, illum id unde. Vitae, similique.</h1>
+        <button class="start-btn">Start Quiz</button>
       </section>
 
       <section id="about">
@@ -33,8 +35,9 @@
       </section>
     </main>
 
+    <!-- Footer Section -->
     <footer>
-      <p>Igna</p>
+      <p>© 2025 Online Quiz System.STZ MADE KAI </p>
     </footer>
   </div>
 </template>
@@ -46,103 +49,147 @@ export default {
 </script>
 
 <style scoped>
-/* Global background and font styles */
+/* Global Styles */
 html,
 body {
-  background-color: #f8f9fa; /* Light Gray/White background */
-  font-family: Arial, sans-serif;
+  background: linear-gradient(to right, #f8f9fa, #e3f2fd); /* Soft gradient */
+  font-family: "Poppins", sans-serif;
   color: #333;
   margin: 0;
   padding: 0;
 }
 
-/* Header styles - Glassmorphism effect */
+/* Header with Glassmorphism */
 header {
-  background: rgba(30, 144, 255, 0.9); /* Dodger Blue with slight transparency */
-  backdrop-filter: blur(10px); /* Glass blur effect */
-  -webkit-backdrop-filter: blur(10px); /* For Safari support */
-  padding: 1rem 2rem;
-  color: white;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 1.5rem 2.5rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
 }
 
-/* Flex container for header */
+/* Flexbox for Header */
 nav {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-/* Logo styles */
+/* Logo Styling */
 .logo h1 {
   margin: 0;
-  font-size: 1.8rem;
-  color: #fff;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #4a90e2;
 }
 
-/* Navigation styles */
+/* Navigation Styles */
 nav ul {
   list-style-type: none;
   margin: 0;
   padding: 0;
   display: flex;
-  gap: 20px;
+  gap: 25px;
 }
 
-/* Navigation links */
-nav ul li {
-  margin: 0;
-}
-
+/* Navigation Links */
 nav ul li a {
   text-decoration: none;
-  color: #f8f9fa;
+  color: #333;
   font-size: 1rem;
-  transition: color 0.3s, transform 0.3s;
+  padding: 8px 15px;
+  border-radius: 8px;
+  transition: all 0.3s ease-in-out;
 }
 
-/* Hover effect for links */
+/* Hover Animation for Links */
 nav ul li a:hover {
-  color: #6c63ff; /* Soft Indigo hover effect */
+  background: linear-gradient(to right, #4a90e2, #7b61ff);
+  color: white;
   transform: scale(1.1);
 }
 
-/* Main content styles */
+/* Main Content Styles */
 main {
-  padding: 20px;
+  padding: 40px 20px;
   background-color: #f8f9fa;
-  color: #333;
 }
 
-/* Section styles */
+/* Section Styles */
 section {
   margin-bottom: 40px;
-  padding: 20px;
-  background-color: #ffffff;
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 30px;
+  background: #fff;
+  border-radius: 15px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s;
 }
 
-/* Home section headline */
+/* Section Hover Effect */
+section:hover {
+  transform: translateY(-5px);
+}
+
+/* Home Section Headline */
 #home h1 {
-  color: #1e90ff;
+  color: #4a90e2;
+  font-size: 2.5rem;
+  margin-bottom: 10px;
 }
 
-/* About and FAQ section headers */
+/* About and FAQ Section Headings */
 h2 {
-  color: #6c63ff;
+  color: #7b61ff;
+  font-size: 1.8rem;
 }
 
-/* Footer styles */
+/* CTA Button Style */
+.start-btn {
+  background: linear-gradient(to right, #4a90e2, #7b61ff);
+  color: white;
+  padding: 12px 24px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  margin-top: 20px;
+}
+
+/* Button Hover Effect */
+.start-btn:hover {
+  background: linear-gradient(to right, #7b61ff, #4a90e2);
+  transform: scale(1.1);
+}
+
+/* Footer Styles */
 footer {
-  background-color: #1e90ff;
+  background-color: #4a90e2;
   color: white;
   text-align: center;
-  padding: 10px 0;
+  padding: 12px 0;
   position: relative;
   bottom: 0;
   width: 100%;
+  font-size: 0.9rem;
+}
+
+/* Responsive Design for Mobile */
+@media (max-width: 768px) {
+  nav {
+    flex-direction: column;
+    gap: 20px;
+  }
+  nav ul {
+    flex-direction: column;
+    gap: 15px;
+  }
+  main {
+    padding: 20px;
+  }
+  section {
+    padding: 20px;
+  }
 }
 </style>
