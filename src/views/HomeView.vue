@@ -1,29 +1,27 @@
 <template>
-  <div id="app">
-    <nav class="navbar">
-      
-      <div class="logo">
-        <a href="#">Online Quiz</a>
-      </div>
+  <body>
+    <div id="app">
+      <nav class="navbar">
+        <div class="logo">
+          <a href="#">Online Quiz</a>
+        </div>
 
-      
-      <ul class="nav-links" :class="{ active: menuActive }">
-        <li><a href="AboutView.vue">Home</a></li>
-        <li><a href="LoginView.vue">About</a></li>
-        <li><a href="FAQView.vue">FAQ</a></li>
-        <li><a href="LoginView.vue">Login</a></li>
-        <li><a href="Sign up.vue">Sign up</a></li>
+        <ul class="nav-links" :class="{ active: menuActive }">
+          <li><a href="AboutView.vue">Home</a></li>
+          <li><a href="LoginView.vue">About</a></li>
+          <li><a href="FAQView.vue">FAQ</a></li>
+          <li><a href="LoginView.vue">Login</a></li>
+          <li><a href="Sign up.vue">Sign up</a></li>
+        </ul>
 
-      </ul>
-
-      
-      <div class="burger" @click="toggleMenu">
-        <div class="line"></div>
-        <div class="line"></div>
-        <div class="line"></div>
-      </div>
-    </nav>
-  </div>
+        <div class="burger" @click="toggleMenu">
+          <div class="line"></div>
+          <div class="line"></div>
+          <div class="line"></div>
+        </div>
+      </nav>
+    </div>
+  </body>
 </template>
 
 <script>
@@ -31,26 +29,24 @@ export default {
   name: 'App',
   data() {
     return {
-      menuActive: false, 
+      menuActive: false,
     };
   },
   methods: {
     toggleMenu() {
-      this.menuActive = !this.menuActive; 
+      this.menuActive = !this.menuActive;
     },
   },
 };
 </script>
 
 <style scoped>
-
-template{
-      margin: 0;
-      padding: 0;
-    
-  
-      background-color: #0A0F1F;
-    }
+/* Set background color for the app */
+body {
+  margin: 0;
+  padding: 0;
+  background-color: black; /* Changed to black */
+}
 
 .navbar {
   display: flex;
@@ -58,10 +54,9 @@ template{
   align-items: center;
   position: fixed;
   width: 100%;
-  background-color: rgba(255, 255, 255, 0.685); 
+  background-color: rgba(255, 255, 255, 0.685);
   backdrop-filter: blur(10px);
 }
-
 
 .navbar .logo a {
   color: rgb(0, 0, 0);
@@ -70,7 +65,6 @@ template{
   padding-left: 10px;
   text-decoration: none;
 }
-
 
 .navbar .nav-links {
   list-style: none;
@@ -95,7 +89,6 @@ template{
 .burger {
   display: none;
   flex-direction: column;
-
   justify-content: space-between;
   width: 30px;
   height: 21px;
@@ -119,7 +112,7 @@ template{
     padding-left: 9px;
     top: 50px;
     left: 0;
-    background-color:  #ffffff;
+    background-color: #ffffff;
     text-align: center;
   }
 
@@ -131,13 +124,11 @@ template{
     display: flex;
   }
 
-
   .nav-links.active {
     display: flex;
   }
 }
-.a{
+.a {
   color: #1cff3a;
 }
-
 </style>
