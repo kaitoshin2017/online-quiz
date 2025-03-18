@@ -1,4 +1,4 @@
-<template>
+<!-- <template>
 <body>
     <div class="container">
         <div class="login-box">
@@ -17,7 +17,80 @@
         </div>
     </div>
 </body>
-</template>
+</template> -->
+
+
+<template>
+    <div class="container" :class="{ active: isRegister }">
+      <!-- Login Form -->
+      <div class="login-box" v-if="!isRegister">
+        <form @submit.prevent="login">
+          <h1>Online Quiz</h1>
+          <h2>Log In</h2>
+          <div class="input-group">
+            <input type="text" v-model="loginData.username" placeholder="Username" required />
+            <i class="bx bxs-user"></i>
+          </div>
+          <div class="input-group">
+            <input type="password" v-model="loginData.password" placeholder="Password" required />
+            <i class="bx bxs-lock-alt"></i>
+          </div>
+          <button type="submit" class="btn">LOG IN</button>
+          <button class="btn btn-outline">ADMIN</button>
+          <p>Don't have an account? <a href="#">Sign up now!</a></p>
+        </form>
+      </div>
+  
+  
+      <!-- Toggle Panel -->
+      <!-- <div class="toggle-box">
+        <div class="toggle-panel toggle-left">
+          <h1>Hello, Welcome!</h1>
+          <p>Sign Up</p>
+          <button class="btn register-btn" @click="toggleRegister">Register</button>
+        </div>
+        <div class="toggle-panel toggle-right">
+          <h1>Welcome Back!</h1>
+          <p>Already have an account?</p>
+          <button class="btn login-btn" @click="toggleLogin">Log In</button>
+        </div>
+      </div> -->
+    </div>
+  </template>
+  
+  <script>
+  export default {
+    data() {
+      return {
+        isRegister: false, // Toggle between login and register
+        loginData: {
+          username: "",
+          password: "",
+          id: "",
+        },
+        registerData: {
+          username: "",
+          password: "",
+          id: "",
+        },
+      };
+    },
+    methods: {
+      toggleRegister() {
+        this.isRegister = true;
+      },
+      toggleLogin() {
+        this.isRegister = false;
+      },
+      login() {
+        alert(`Logging in with: \nUsername: ${this.loginData.username} \nID: ${this.loginData.id}`);
+      },
+      register() {
+        alert(`Registering: \nUsername: ${this.registerData.username} \nID: ${this.registerData.id}`);
+      },
+    },
+  };
+  </script>
 
 <style>
 
@@ -82,30 +155,9 @@ body {
            padding-left: 232px;
          }
 </style>
-
+<!-- 
 
 <script>
-const { createApp } = Vue;
 
-createApp({
-    data() {
-        return {
-            username: "",
-            password: ""
-        };
-    },
-    methods: {
-        validateForm() {
-            if (!this.username || !this.password) {
-                alert("All fields are required!");
-                return;
-            }
-            alert(`Welcome, ${this.username}!`);
-        },
-        adminLogin() {
-            alert("Redirecting to admin login...");
-        }
-    }
-}).mount("#app");
 
-</script>
+</script> -->
