@@ -4,7 +4,7 @@
     <header>
       <nav>
         <div class="logo">
-          <h1>Online Quiz</h1>
+          <h1>EvoQuiz</h1>
         </div>
         <ul>
           <li><router-link to="/">Home</router-link></li>
@@ -37,7 +37,7 @@
 
     <!-- Footer Section -->
     <footer>
-      <p>© 2025 Online Quiz System.STZ MADE KAI </p>
+      <p>© 2025 Online Quiz System.STZ MADE CJ Kai Igna </p>
     </footer>
   </div>
 </template>
