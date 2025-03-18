@@ -1,134 +1,127 @@
 <template>
-  <body>
-    <div id="app">
-      <nav class="navbar">
+  <div id="app">
+    <header>
+      <nav>
         <div class="logo">
-          <a href="#">Online Quiz</a>
+          <h1>Online Quiz</h1>
         </div>
-
-        <ul class="nav-links" :class="{ active: menuActive }">
-          <li><a href="AboutView.vue">Home</a></li>
-          <li><a href="LoginView.vue">About</a></li>
-          <li><a href="FAQView.vue">FAQ</a></li>
-          <li><a href="LoginView.vue">Login</a></li>
-          <li><a href="Sign up.vue">Sign up</a></li>
+        <ul>
+          <li><router-link to="/">Home</router-link></li>
+          <li><router-link to="/about">About</router-link></li>
+          <li><router-link to="/faq">FAQ</router-link></li>
+          <li><router-link to="/login">Log In</router-link></li>
+          <li><router-link to="/signup">Sign Up</router-link></li>
         </ul>
-
-        <div class="burger" @click="toggleMenu">
-          <div class="line"></div>
-          <div class="line"></div>
-          <div class="line"></div>
-        </div>
       </nav>
-    </div>
-  </body>
+    </header>
+
+    <main>
+      <section id="home">
+        <h1>Welcome to the Online Quiz System</h1>
+        <p>Test your knowledge with our fun and engaging quizzes!</p>
+      </section>
+
+      <section id="about">
+        <h2>About Us</h2>
+        <p>We are dedicated to providing a platform for learning and testing knowledge through quizzes.</p>
+      </section>
+
+      <section id="faq">
+        <h2>Frequently Asked Questions</h2>
+        <p>Here you can find answers to the most common questions about our quiz system.</p>
+      </section>
+    </main>
+
+    <footer>
+      <p>Igna
+      </p>
+    </footer>
+  </div>
 </template>
 
 <script>
 export default {
-  name: 'App',
-  data() {
-    return {
-      menuActive: false,
-    };
-  },
-  methods: {
-    toggleMenu() {
-      this.menuActive = !this.menuActive;
-    },
-  },
+  name: "HomePage",
 };
 </script>
 
 <style scoped>
-/* Set background color for the app */
+/* Global background and font styles */
+html,
 body {
   margin: 0;
   padding: 0;
-  background-color: black; /* Changed to black */
+  background-color: #333; /* Gray background */
+  font-family: Arial, sans-serif;
+  color: #333;
 }
 
-.navbar {
+/* Header styles */
+header {
+  background-color: #4caf50;
+  padding: 1rem 2rem;
+  color: white;
+}
+
+/* Flex container for header */
+nav {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  position: fixed;
-  width: 100%;
-  background-color: rgba(255, 255, 255, 0.685);
-  backdrop-filter: blur(10px);
 }
 
-.navbar .logo a {
-  color: rgb(0, 0, 0);
-  font-size: 24px;
-  font-weight: bold;
-  padding-left: 10px;
-  text-decoration: none;
+/* Logo styles */
+.logo h1 {
+  margin: 0;
+  font-size: 1.8rem;
 }
 
-.navbar .nav-links {
-  list-style: none;
+/* Navigation styles */
+nav ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
   display: flex;
+  gap: 20px;
 }
 
-.navbar .nav-links li {
-  margin: 0 15px;
+/* Navigation links */
+nav ul li {
+  margin: 0;
 }
 
-.navbar .nav-links li a {
-  color: rgb(0, 0, 0);
+nav ul li a {
   text-decoration: none;
-  font-size: 18px;
-  padding-right: 10px;
+  color: white;
+  font-size: 1rem;
+  transition: color 0.3s;
 }
 
-.navbar .nav-links li a:hover {
-  color: #b97a7a;
+/* Hover effect for links */
+nav ul li a:hover {
+  color: #ddd;
 }
 
-.burger {
-  display: none;
-  flex-direction: column;
-  justify-content: space-between;
-  width: 30px;
-  height: 21px;
-  padding-right: 15px;
-  cursor: pointer;
-  padding-left: 30%;
+/* Main content styles */
+main {
+  padding: 20px;
+  background-color: #333;
+  color: white;
 }
 
-.burger .line {
-  width: 90%;
-  height: 3px;
-  background-color: rgb(0, 0, 0);
+/* Section spacing */
+section {
+  margin-bottom: 40px;
 }
 
-@media screen and (max-width: 768px) {
-  .navbar .nav-links {
-    display: none;
-    width: 100%;
-    flex-direction: column;
-    position: absolute;
-    padding-left: 9px;
-    top: 50px;
-    left: 0;
-    background-color: #ffffff;
-    text-align: center;
-  }
-
-  .navbar .nav-links li {
-    margin: 15px 0;
-  }
-
-  .burger {
-    display: flex;
-  }
-
-  .nav-links.active {
-    display: flex;
-  }
-}
-.a {
-  color: #1cff3a;
+/* Footer styles */
+footer {
+  background-color: #333;
+  color: white;
+  text-align: center;
+  padding: 10px 0;
+  position: relative;
+  bottom: 0;
+  width: 100%;
 }
 </style>
