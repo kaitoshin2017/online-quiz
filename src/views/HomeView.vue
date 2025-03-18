@@ -1,125 +1,127 @@
 <template>
   <div id="app">
-    <nav class="navbar">
-      <!-- Logo -->
-      <div class="logo">
-        <a href="#">Online Quiz</a>
-      </div>
+    <header>
+      <nav>
+        <div class="logo">
+          <h1>Online Quiz</h1>
+        </div>
+        <ul>
+          <li><router-link to="/">Home</router-link></li>
+          <li><router-link to="/about">About</router-link></li>
+          <li><router-link to="/faq">FAQ</router-link></li>
+          <li><router-link to="/login">Log In</router-link></li>
+          <li><router-link to="/signup">Sign Up</router-link></li>
+        </ul>
+      </nav>
+    </header>
 
-      <!-- Navbar Links -->
-      <ul class="nav-links" :class="{ active: menuActive }">
-        <li><a href="#">Home</a></li>
-        <li><a href="#">About</a></li>
-        <li><a href="#">FAQ</a></li>
-        <li><a href="#">Login</a></li>
-        <li><a href="#">Sign up</a></li>
+    <main>
+      <section id="home">
+        <h1>Welcome to the Online Quiz System</h1>
+        <p>Test your knowledge with our fun and engaging quizzes!</p>
+      </section>
 
-      </ul>
+      <section id="about">
+        <h2>About Us</h2>
+        <p>We are dedicated to providing a platform for learning and testing knowledge through quizzes.</p>
+      </section>
 
-      <!-- Hamburger Menu Icon -->
-      <div class="burger" @click="toggleMenu">
-        <div class="line"></div>
-        <div class="line"></div>
-        <div class="line"></div>
-      </div>
-    </nav>
+      <section id="faq">
+        <h2>Frequently Asked Questions</h2>
+        <p>Here you can find answers to the most common questions about our quiz system.</p>
+      </section>
+    </main>
+
+    <footer>
+      <p>Igna
+      </p>
+    </footer>
   </div>
 </template>
 
 <script>
 export default {
-  name: 'App',
-  data() {
-    return {
-      menuActive: false, // To toggle the menu on mobile
-    };
-  },
-  methods: {
-    toggleMenu() {
-      this.menuActive = !this.menuActive; // Toggle active class
-    },
-  },
+  name: "HomePage",
 };
 </script>
 
 <style scoped>
+/* Global background and font styles */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #333; /* Gray background */
+  font-family: Arial, sans-serif;
+  color: #333;
+}
 
+/* Header styles */
+header {
+  background-color: #4caf50;
+  padding: 1rem 2rem;
+  color: white;
+}
 
-.navbar {
+/* Flex container for header */
+nav {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #313131;
-  height: 70px;
-  padding: 10px 20px;
 }
 
-
-.navbar .logo a {
-  color: rgb(255, 255, 255);
-  font-size: 24px;
-  font-weight: bold;
-  text-decoration: none;
+/* Logo styles */
+.logo h1 {
+  margin: 0;
+  font-size: 1.8rem;
 }
 
-
-.navbar .nav-links {
-  list-style: none;
+/* Navigation styles */
+nav ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
   display: flex;
+  gap: 20px;
 }
 
-.navbar .nav-links li {
-  margin: 0 15px;
+/* Navigation links */
+nav ul li {
+  margin: 0;
 }
 
-.navbar .nav-links li a {
-  color: white;
+nav ul li a {
   text-decoration: none;
-  font-size: 18px;
+  color: white;
+  font-size: 1rem;
+  transition: color 0.3s;
 }
 
-.navbar .nav-links li a:hover {
-  color: cyan;
+/* Hover effect for links */
+nav ul li a:hover {
+  color: #ddd;
 }
 
-.burger {
-  display: none;
-  flex-direction: column;
-  justify-content: space-between;
-  width: 30px;
-  height: 21px;
-  cursor: pointer;
+/* Main content styles */
+main {
+  padding: 20px;
+  background-color: #333;
+  color: white;
 }
 
-.burger .line {
+/* Section spacing */
+section {
+  margin-bottom: 40px;
+}
+
+/* Footer styles */
+footer {
+  background-color: #333;
+  color: white;
+  text-align: center;
+  padding: 10px 0;
+  position: relative;
+  bottom: 0;
   width: 100%;
-  height: 3px;
-  background-color: white;
-}
-
-@media screen and (max-width: 768px) {
-  .navbar .nav-links {
-    display: none;
-    width: 100%;
-    flex-direction: column;
-    position: absolute;
-    top: 50px;
-    left: 0;
-    background-color: #333;
-    text-align: center;
-  }
-
-  .navbar .nav-links li {
-    margin: 15px 0;
-  }
-
-  .burger {
-    display: flex;
-  }
-
-
-  .nav-links.active {
-    display: flex;
-  }
 }
 </style>
