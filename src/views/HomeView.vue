@@ -1,125 +1,195 @@
 <template>
   <div id="app">
-    <nav class="navbar">
-      <!-- Logo -->
-      <div class="logo">
-        <a href="#">Online Quiz</a>
-      </div>
+    <!-- Header Section -->
+    <header>
+      <nav>
+        <div class="logo">
+          <h1>EvoQuiz</h1>
+        </div>
+        <ul>
+          <li><router-link to="/">Home</router-link></li>
+          <li><router-link to="/about">About</router-link></li>
+          <li><router-link to="/faq">FAQ</router-link></li>
+          <li><router-link to="/login">Log In</router-link></li>
+          <li><router-link to="/signup">Sign Up</router-link></li>
+        </ul>
+      </nav>
+    </header>
 
-      <!-- Navbar Links -->
-      <ul class="nav-links" :class="{ active: menuActive }">
-        <li><a href="#">Home</a></li>
-        <li><a href="#">About</a></li>
-        <li><a href="#">FAQ</a></li>
-        <li><a href="#">Login</a></li>
-        <li><a href="#">Sign up</a></li>
+    <!-- Main Content -->
+    <main>
+      <section id="home">
+        <h1>Welcome to the Online Quiz System 🎯</h1>
+        <p>Test your knowledge with our fun and engaging quizzes!</p>
+        <button class="start-btn">Start Quiz</button>
+      </section>
 
-      </ul>
+      <section id="about">
+        <h2>About Us</h2>
+        <p>We are dedicated to providing a platform for learning and testing knowledge through quizzes.</p>
+      </section>
 
-      <!-- Hamburger Menu Icon -->
-      <div class="burger" @click="toggleMenu">
-        <div class="line"></div>
-        <div class="line"></div>
-        <div class="line"></div>
-      </div>
-    </nav>
+      <section id="faq">
+        <h2>Frequently Asked Questions</h2>
+        <p>Here you can find answers to the most common questions about our quiz system.</p>
+      </section>
+    </main>
+
+    <!-- Footer Section -->
+    <footer>
+      <p>© 2025 Online Quiz System.STZ MADE CJ Kai Igna </p>
+    </footer>
   </div>
 </template>
 
 <script>
 export default {
-  name: 'App',
-  data() {
-    return {
-      menuActive: false, // To toggle the menu on mobile
-    };
-  },
-  methods: {
-    toggleMenu() {
-      this.menuActive = !this.menuActive; // Toggle active class
-    },
-  },
+  name: "HomePage",
 };
 </script>
 
 <style scoped>
+/* Global Styles */
+html,
+body {
+  background: linear-gradient(to right, #f8f9fa, #e3f2fd); /* Soft gradient */
+  font-family: "Poppins", sans-serif;
+  color: #333;
+  margin: 0;
+  padding: 0;
+}
 
+/* Header with Glassmorphism */
+header {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 1.5rem 2.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+}
 
-.navbar {
+/* Flexbox for Header */
+nav {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #313131;
-  height: 70px;
-  padding: 10px 20px;
 }
 
-
-.navbar .logo a {
-  color: rgb(255, 255, 255);
-  font-size: 24px;
-  font-weight: bold;
-  text-decoration: none;
+/* Logo Styling */
+.logo h1 {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #4a90e2;
 }
 
-
-.navbar .nav-links {
-  list-style: none;
+/* Navigation Styles */
+nav ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
   display: flex;
+  gap: 25px;
 }
 
-.navbar .nav-links li {
-  margin: 0 15px;
-}
-
-.navbar .nav-links li a {
-  color: white;
+/* Navigation Links */
+nav ul li a {
   text-decoration: none;
-  font-size: 18px;
+  color: #333;
+  font-size: 1rem;
+  padding: 8px 15px;
+  border-radius: 8px;
+  transition: all 0.3s ease-in-out;
 }
 
-.navbar .nav-links li a:hover {
-  color: cyan;
+/* Hover Animation for Links */
+nav ul li a:hover {
+  background: linear-gradient(to right, #4a90e2, #7b61ff);
+  color: white;
+  transform: scale(1.1);
 }
 
-.burger {
-  display: none;
-  flex-direction: column;
-  justify-content: space-between;
-  width: 30px;
-  height: 21px;
+/* Main Content Styles */
+main {
+  padding: 40px 20px;
+  background-color: #f8f9fa;
+}
+
+/* Section Styles */
+section {
+  margin-bottom: 40px;
+  padding: 30px;
+  background: #fff;
+  border-radius: 15px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s;
+}
+
+/* Section Hover Effect */
+section:hover {
+  transform: translateY(-5px);
+}
+
+/* Home Section Headline */
+#home h1 {
+  color: #4a90e2;
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+/* About and FAQ Section Headings */
+h2 {
+  color: #7b61ff;
+  font-size: 1.8rem;
+}
+
+/* CTA Button Style */
+.start-btn {
+  background: linear-gradient(to right, #4a90e2, #7b61ff);
+  color: white;
+  padding: 12px 24px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 25px;
   cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  margin-top: 20px;
 }
 
-.burger .line {
+/* Button Hover Effect */
+.start-btn:hover {
+  background: linear-gradient(to right, #7b61ff, #4a90e2);
+  transform: scale(1.1);
+}
+
+/* Footer Styles */
+footer {
+  background-color: #4a90e2;
+  color: white;
+  text-align: center;
+  padding: 12px 0;
+  position: relative;
+  bottom: 0;
   width: 100%;
-  height: 3px;
-  background-color: white;
+  font-size: 0.9rem;
 }
 
-@media screen and (max-width: 768px) {
-  .navbar .nav-links {
-    display: none;
-    width: 100%;
+/* Responsive Design for Mobile */
+@media (max-width: 768px) {
+  nav {
     flex-direction: column;
-    position: absolute;
-    top: 50px;
-    left: 0;
-    background-color: #333;
-    text-align: center;
+    gap: 20px;
   }
-
-  .navbar .nav-links li {
-    margin: 15px 0;
+  nav ul {
+    flex-direction: column;
+    gap: 15px;
   }
-
-  .burger {
-    display: flex;
+  main {
+    padding: 20px;
   }
-
-
-  .nav-links.active {
-    display: flex;
+  section {
+    padding: 20px;
   }
 }
 </style>
