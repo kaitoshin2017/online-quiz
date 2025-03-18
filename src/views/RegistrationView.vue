@@ -1,244 +1,196 @@
 <template>
+ <div id="app">
   <div class="container">
-    <div class="left-panel">
-      <section>
-        <img v-if="avatar" :src="URL.createObjectURL(avatar)" class="avatar" alt="User Avatar" />
-        <img v-else :src="require('@/assets/default-avatar.png')" class="avatar" alt="Default Avatar" /> <!-- Default avatar -->
-        <h2>Let's get you set up</h2>
-        <p>It's quick and easy.</p>
-        <button class="next-btn" @click="goToNextStep">➡</button>
-      </section>
-    </div>
+   <h1>Sign Up</h1>
+    <form @submit.prevent="submitForm">
+      <div class="form-grid">
+        <div class="column">
 
-    <div class="middle-panel">
-      <form @submit.prevent="handleSubmit">
-        <div class="form-group">
-          <label>ID:</label> <span>3</span>
+          <h2>"It's always seems impossible until it's done."</h2>
         </div>
+        
+        <div class="column">
+          <label for="firstName">FirstName</label>
+          <input type="text" id="firstName" v-model="form.firstName" required/>
 
-        <div class="input-row">
-          <input v-model="form.firstName" type="text" placeholder="First Name" required />
-          <input v-model="form.lastName" type="text" placeholder="Last Name" required />
+
+          <label for="lastName">LastName</label>
+          <input type="text" id="lastName" v-model="form.lastName" required/>
+
+          <label for="section">Section</label>
+          <input type="text" id="section" v-model="form.section" required/>
+          
+
+          <label for="dob">Date of Birth</label>
+          <input type="date" id="dob" v-model="form.dob" required/>
+
+          <button type="submit":disabled="passwordMismatch">Submit</button>
+          
         </div>
+       
+        <div class="column">
+          <label for="profileImage">Profile Image</label>
+        <input type="file" id="profileImage" @change="hamdleFilechange"/>
 
-        <div class="form-group">
-          <label>Date of Birth:</label>
-          <input v-model="form.dob" type="date" required />
+
+          <label for="username">Username</label>
+          <input type="text" id="username" v-model="form.username" required/>
+
+          <label for="password">Password</label>
+          <input type="password" id="password" v-model="form.password" required/>
+
+          <label for="confirmPassword"> Confirm Password</label>
+          <input type="password" id="confirmPassword" v-model="form.confirmPassword" required :class="{'error': passwordmismatch}"/>
+          
+          <div v-if="passwordMismatch" class="warning">
+              <span>⚠️ Passwords do not match!</span>
+            </div>
+
+          <button class="cancel" type="button" @click="cancelForm">Cancel</button>
         </div>
-      </form>
-    </div>
-
-    <div class="right-panel">
-      <div class="form-group">
-        <label>Profile Image:</label>
-        <input ref="imageInput" type="file" @change="handleImageUpload" id="imageUpload" />
-        <label for="imageUpload" class="file-btn">Select Image</label>
       </div>
-
-      <div class="input-row">
-        <input v-model="form.username" type="text" placeholder="Username" required />
-        <input v-model="form.section" type="text" placeholder="Section" required />
-        <input :type="showPassword ? 'text' : 'password'" v-model="form.password" id="password" placeholder="Password" required />
-        <input :type="showPassword ? 'text' : 'password'" v-model="form.confirmPassword" id="confirmPassword" placeholder="Confirm P.W." />
-      </div>
-
-      <div class="show-pass">
-        <input type="checkbox" v-model="showPassword" id="showPassword" />
-        <label for="showPassword">Show Password</label>
-      </div>
-
-      <div class="buttons">
-        <button type="button" class="cancel-btn" @click="cancel">Cancel</button>
-        <button type="submit" class="register-btn">Register</button>
-      </div>
-
-      <p class="login-text">Already have an account? <a href="#">Login</a></p>
-    </div>
+    </form>
   </div>
+ </div>
 </template>
 
 <script>
-import { ref, reactive } from "vue";
-
-export default {
-  setup() {
-    const form = reactive({
-      firstName: '',
-      lastName: '',
-      dob: '',
-      username: '',
-      section: '',
-      password: '',
-      confirmPassword: ''
-    });
-
-    const showPassword = ref(false);
-    const avatar = ref(null);
-
-    const goToNextStep = () => {
-      console.log("Next step");
-    };
-
-    const handleImageUpload = (event) => {
-      const file = event.target.files[0];
-      if (file) {
-        avatar.value = file;
+export default{
+  data(){
+    return{
+    form:{
+    firstName:"",
+    lastName:"",
+    dob:"",
+    profileImage:null,
+    username:"",
+    section:"",
+    password:"",
+    confirmPassword:"",
       }
     };
-
-    const handleSubmit = () => {
-      if (form.password !== form.confirmPassword) {
-        alert("Passwords do not match!");
-        return;
+  },
+  computed:{
+    passwordMismatch(){
+      return this.form.password!== this.form.confirmPassword;
+    }
+  },
+  methods:{
+    handleFileChange(event){
+      const file= event.target.files[0];
+      if (file){
+        this.form.profileImage = file;
       }
+    },
+    submitForm(){
+      console.log('Form Submitted:', this.form);
+    },
 
-      if (!form.firstName || !form.lastName || !form.username) {
-        alert("Please fill out all required fields.");
-        return;
-      }
-
-      console.log("Form submitted:", form);
-      resetForm();
-    };
-
-    const cancel = () => {
-      console.log("Registration cancelled");
-      resetForm();
-    };
-
-    const resetForm = () => {
-      form.firstName = '';
-      form.lastName = '';
-      form.dob = '';
-      form.username = '';
-      form.section = '';
-      form.password = '';
-      form.confirmPassword = '';
-      showPassword.value = false;
-      avatar.value = null;
-
-      const imageInput = document.getElementById("imageUpload");
-      if (imageInput) {
-        imageInput.value = '';
-      }
-    };
-
-    return {
-      form,
-      showPassword,
-      avatar,
-      goToNextStep,
-      handleImageUpload,
-      handleSubmit,
-      cancel
-    };
+    cancelForm() {
+      
+      this.form = {
+        firstName: "",
+        lastName: "",
+        dob: "",
+        profileImage: null,
+        username: "",
+        section: "",
+        password: "",
+        confirmPassword: "",
+      };
+      console.log("Form reset!");
+    }
   }
 };
 </script>
 
 <style scoped>
-/* Same styling as before */
-</style>
-
-
-<style scoped>
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  font-family: Arial, sans-serif;
-}
-
-.container {
-  max-width: 900px;
-  margin: 0 auto;
-  display: grid; /* Use grid instead of flex */
-  grid-template-columns: 1fr 2fr 1fr; /* Defines three columns: left (avatar), middle (form), right (extra inputs) */
-  gap: 20px; /* Adds space between columns */
-  padding: 32px 48px;
-  background-color: #fff;
-  box-shadow: 0 0 30px rgba(0, 0, 0, .2);
-}
-
-.left-panel,
-.middle-panel,
-.right-panel {
-  padding: 16px;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-}
-
-.left-panel {
+#app {
+  font-family: Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   text-align: center;
+  padding: 20px;
+
 }
 
-.avatar {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  margin-bottom: 16px;
+h1{
+  margin-bottom: 5%;
+}
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center; 
+  align-items: center;
+  width: 75%;
+  height: 70dvh;
+  margin: 0 auto;
+  background-color: #ec5bec;
 }
 
 h2 {
-  color: #00698f;
+  font-size: 1.5em;
+  color: #333;
+  margin-bottom: 20px;
 }
 
-button.next-btn {
-  background-color: #7494ec;
-  border: none;
-  padding: 10px 20px;
-  color: white;
-  cursor: pointer;
-  font-size: 16px;
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 70%;
+}
+
+label {
+  margin-bottom: 8px;
+  font-weight: bold;
+}
+
+input {
+  margin-bottom: 12px;
+  padding: 8px;
+  width: 100%;
+  border: 1px solid #ccc;
   border-radius: 4px;
 }
 
-input[type="text"],
-input[type="password"],
-input[type="date"],
-input[type="file"]{
-  width: 100%;
-  padding: 10px;
-  margin: 10px 0;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-}
-
 button {
-  background-color: #7494ec;
-  padding: 12px;
-  width: 100%;
+  padding: 10px 20px;
+  background-color: #4CAF50;
   color: white;
-  border-radius: 8px;
   border: none;
-  font-size: 16px;
+  border-radius: 4px;
   cursor: pointer;
 }
 
-button:disabled {
+
+.cancel {
+  padding: 10px 20px;
+  background-color:rgb(255, 255, 255);
+  color: rgb(0, 0, 0);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:disabled, .cancel {
   background-color: #ddd;
-  cursor: not-allowed;
 }
 
-.show-pass {
-  display: flex;
-  align-items: center;
-  margin-top: 10px;
+.error {
+  border-color: red;
 }
 
-.cancel-btn {
-  background-color: #f44336;
-  margin-top: 10px;
-}
-
-.login-text {
-  text-align: center;
-  margin-top: 20px;
-}
-
-.login-text a {
-  color: #00698f;
-  text-decoration: none;
+.warning {
+  color: red;
+  font-weight: 5px;
+  font-size: 1em;
+  margin-bottom: 5px;
 }
 </style>
-
