@@ -41,20 +41,7 @@
         </form>
       </div>
   
-  
-      <!-- Toggle Panel -->
-      <!-- <div class="toggle-box">
-        <div class="toggle-panel toggle-left">
-          <h1>Hello, Welcome!</h1>
-          <p>Sign Up</p>
-          <button class="btn register-btn" @click="toggleRegister">Register</button>
-        </div>
-        <div class="toggle-panel toggle-right">
-          <h1>Welcome Back!</h1>
-          <p>Already have an account?</p>
-          <button class="btn login-btn" @click="toggleLogin">Log In</button>
-        </div>
-      </div> -->
+
     </div>
   </template>
   
@@ -105,7 +92,7 @@ body {
         }
         .container {
             background: white;
-            width: 800px;
+            width: 650px;
             padding: 20px;
             border-radius: 15px;
             display: flex;
@@ -152,7 +139,7 @@ body {
             opacity: 0.8;
         }
          p{
-           padding-left: 232px;
+           padding-left: 180px;
          }
 </style>
 <!-- 
