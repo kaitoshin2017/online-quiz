@@ -235,7 +235,7 @@ const handleCancel = () => {
 
 <style scoped>
 /* Import Font Awesome */
-@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css');
+/* @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css'); */
 
 .registration-container {
   display: flex;
@@ -540,6 +540,7 @@ button:disabled {
   .registration-container {
     background: linear-gradient(135deg, #212529 0%, #343a40 100%);
   }
+ HEAD
 
   .registration-form {
     background-color: #1a1a1a;
@@ -610,3 +611,8 @@ button:disabled {
   }
 }
 </style>
+
+
+
+
+

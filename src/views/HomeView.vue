@@ -1,3 +1,14 @@
+<<<<<<< HEAD
+<script setup>
+
+</script>
+
+<template>
+  <main>
+    <TheWelcome />
+  </main>
+</template>
+=======
 <template>
   <div id="app">
     <!-- Header Section -->
@@ -193,3 +204,4 @@ footer {
   }
 }
 </style>
+>>>>>>> bc02b7d1ca7cb68b0585d82ba6eb35989806a3a4
