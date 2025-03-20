@@ -82,10 +82,21 @@ export default{
         this.form.profileImage = file;
       }
     },
-    submitForm(){
-    
-      console.log('Form Submitted:', this.form);
-    },
+    submitForm() {
+  console.log("Form submitted!");
+  console.log('Form Data:', this.form);
+
+  this.form = {
+    firstName: "",
+    lastName: "",
+    dob: "",
+    profileImage: null,
+    username: "",
+    section: "",
+    password: "",
+    confirmPassword: "",
+  };
+},
 
     cancelForm() {
       
