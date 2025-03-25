@@ -92,7 +92,7 @@ body {
         }
         .container {
             background: white;
-            width: 650px;
+            width: 600px;
             padding: 20px;
             border-radius: 15px;
             display: flex;
@@ -139,7 +139,7 @@ body {
             opacity: 0.8;
         }
          p{
-           padding-left: 180px;
+           padding-left: 150px;
          }
 </style>
 <!-- 
