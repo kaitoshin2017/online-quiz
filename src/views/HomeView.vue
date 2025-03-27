@@ -6,7 +6,10 @@
         <div class="logo">
           <Logo />
         </div>
-        <ul>
+        <button class="menu-btn" @click="toggleMenu">
+          <i :class="isMenuOpen ? 'fas fa-times' : 'fas fa-bars'"></i>
+        </button>
+        <ul :class="{ 'menu-open': isMenuOpen }">
           <li><router-link to="/" class="active">Home</router-link></li>
           <li><router-link to="/about">About</router-link></li>
           <li><router-link to="/faq">FAQ</router-link></li>
@@ -21,7 +24,12 @@
       <section id="home">
         <h1>Welcome to the Online Quiz System 🎯</h1>
         <p>Test your knowledge with our fun and engaging quizzes!</p>
-        <button class="start-btn">Start Quiz</button>
+        <div class="cta-buttons">
+          <button class="start-btn">Start Quiz</button>
+          <button class="switch-view-btn" @click="switchView">
+            <i class="fas fa-exchange-alt"></i> Switch View
+          </button>
+        </div>
       </section>
 
       <section id="about">
@@ -54,8 +62,24 @@ export default {
     Logo
   },
   data() {
-    // ... existing code ...
+    return {
+      isMenuOpen: false
+    }
   },
+  methods: {
+    toggleMenu() {
+      this.isMenuOpen = !this.isMenuOpen;
+    },
+    switchView() {
+      // Toggle between student and teacher views
+      const currentPath = this.$route.path;
+      if (currentPath === '/student') {
+        this.$router.push('/teacher-panel');
+      } else {
+        this.$router.push('/student');
+      }
+    }
+  }
 };
 </script>
 
@@ -346,6 +370,107 @@ footer {
   .start-btn {
     padding: 12px 25px;
     font-size: 1rem;
+  }
+}
+
+/* Menu Button Styles */
+.menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #4a90e2;
+  cursor: pointer;
+  padding: 8px;
+  transition: all 0.3s ease;
+}
+
+.menu-btn:hover {
+  color: #7b61ff;
+}
+
+/* CTA Buttons */
+.cta-buttons {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.switch-view-btn {
+  background: rgba(74, 144, 226, 0.1);
+  color: #4a90e2;
+  padding: 15px 30px;
+  font-size: 1.1rem;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.switch-view-btn:hover {
+  background: rgba(74, 144, 226, 0.2);
+  transform: translateY(-3px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .menu-btn {
+    display: block;
+  }
+
+  nav ul {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 20px;
+    flex-direction: column;
+    gap: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  }
+
+  nav ul.menu-open {
+    display: flex;
+  }
+
+  .cta-buttons {
+    flex-direction: column;
+  }
+
+  .start-btn, .switch-view-btn {
+    width: 100%;
+  }
+}
+
+/* Dark Mode Styles */
+@media (prefers-color-scheme: dark) {
+  .menu-btn {
+    color: #7b61ff;
+  }
+
+  .menu-btn:hover {
+    color: #4a90e2;
+  }
+
+  nav ul {
+    background: rgba(30, 30, 30, 0.95);
+  }
+
+  .switch-view-btn {
+    background: rgba(123, 97, 255, 0.1);
+    color: #7b61ff;
+  }
+
+  .switch-view-btn:hover {
+    background: rgba(123, 97, 255, 0.2);
   }
 }
 </style>
