@@ -1,0 +1,101 @@
+/* Global Font Styles */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
+body {
+  min-height: 100vh;
+  background: linear-gradient(to right, #f8f9fa, #e3f2fd);
+}
+
+/* Dark Mode */
+:global(.dark-mode) body {
+  background: linear-gradient(to right, #1a1a1a, #2d3436);
+}
+
+/* Common Header Styles */
+header {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 1.5rem 2.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+}
+
+nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+nav ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 25px;
+}
+
+nav ul li a {
+  text-decoration: none;
+  color: #333;
+  font-size: 1rem;
+  padding: 8px 15px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+nav ul li a:hover, nav ul li a.active {
+  color: #4a90e2;
+  background: rgba(74, 144, 226, 0.1);
+}
+
+/* Dark Mode Header */
+:global(.dark-mode) header {
+  background: rgba(30, 30, 30, 0.8);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+:global(.dark-mode) nav ul li a {
+  color: #fff;
+}
+
+:global(.dark-mode) nav ul li a:hover,
+:global(.dark-mode) nav ul li a.active {
+  color: #7b61ff;
+  background: rgba(123, 97, 255, 0.1);
+}
+
+/* Common Footer Styles */
+footer {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+:global(.dark-mode) footer {
+  color: #aaa;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  nav {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  nav ul {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+} 

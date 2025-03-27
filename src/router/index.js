@@ -1,5 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
+import LoginView from '../views/LoginView.vue'
+import AboutView from '../views/AboutView.vue'
+import RegistrationView from '../views/RegistrationView.vue'
+import TeacherPannel from '../views/TeacherPannel.vue'
+import StudentView from '../views/StudentView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -12,20 +17,52 @@ const router = createRouter({
     {
       path: '/login',
       name: 'login',
-      component: () => import('../views/LoginView.vue'),
+      component: LoginView,
     },
     {
       path: '/about',
       name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import('../views/AboutView.vue'),
+      component: AboutView,
     },
     {
       path: '/signup',
       name: 'registration',
-      component: () => import('../views/RegistrationView.vue'),
+      component: RegistrationView,
+    },
+    {
+      path: '/teacher-panel',
+      name: 'teacher-panel',
+      component: TeacherPannel,
+    },
+    {
+      path: '/student',
+      name: 'student',
+      component: StudentView,
+    },
+    {
+      path: '/my-quizzes',
+      name: 'my-quizzes',
+      component: () => import('../views/MyQuizzesView.vue'),
+    },
+    {
+      path: '/take-quiz/:id',
+      name: 'take-quiz',
+      component: () => import('../views/TakeQuizView.vue'),
+    },
+    {
+      path: '/results',
+      name: 'results',
+      component: () => import('../views/ResultsView.vue'),
+    },
+    {
+      path: '/profile',
+      name: 'profile',
+      component: () => import('../views/ProfileView.vue'),
+    },
+    {
+      path: '/review-quiz/:id',
+      name: 'review-quiz',
+      component: () => import('../views/ReviewQuizView.vue'),
     }
   ],
 })

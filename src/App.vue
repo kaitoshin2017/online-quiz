@@ -1,13 +1,24 @@
-<script setup>
-
+<script>
+export default {
+  name: 'App'
+}
 </script>
 
 <template>
- 
-  <RouterView />
+  <div id="app">
+    <router-view></router-view>
+  </div>
 </template>
 
-<style scoped>
+<style>
+@import './assets/styles/global.css';
+
+#app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
 header {
   line-height: 1.5;
   max-height: 100vh;
