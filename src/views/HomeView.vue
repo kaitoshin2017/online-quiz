@@ -26,9 +26,6 @@
         <p>Test your knowledge with our fun and engaging quizzes!</p>
         <div class="cta-buttons">
           <button class="start-btn">Start Quiz</button>
-          <button class="switch-view-btn" @click="switchView">
-            <i class="fas fa-exchange-alt"></i> Switch View
-          </button>
         </div>
       </section>
 
@@ -38,10 +35,8 @@
       </section>
 
       <section id="faq">
-        <h2>Frequently Asked Questions
-        </h2>
-        <h3><button @click="$router.push('/teacher')">Go to Teacher Panel</button>
-        </h3>
+        <h2>Frequently Asked Questions</h2>
+        <h3><button @click="$router.push('/teacher')">Go to Teacher Panel</button></h3>
         <p>Here you can find answers to the most common questions about our quiz system.</p>
       </section>
     </main>
@@ -69,15 +64,6 @@ export default {
   methods: {
     toggleMenu() {
       this.isMenuOpen = !this.isMenuOpen;
-    },
-    switchView() {
-      // Toggle between student and teacher views
-      const currentPath = this.$route.path;
-      if (currentPath === '/student') {
-        this.$router.push('/teacher-panel');
-      } else {
-        this.$router.push('/student');
-      }
     }
   }
 };
@@ -392,28 +378,8 @@ footer {
 /* CTA Buttons */
 .cta-buttons {
   display: flex;
-  gap: 15px;
   justify-content: center;
   margin-top: 20px;
-}
-
-.switch-view-btn {
-  background: rgba(74, 144, 226, 0.1);
-  color: #4a90e2;
-  padding: 15px 30px;
-  font-size: 1.1rem;
-  border: none;
-  border-radius: 30px;
-  cursor: pointer;
-  transition: all 0.3s ease-in-out;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.switch-view-btn:hover {
-  background: rgba(74, 144, 226, 0.2);
-  transform: translateY(-3px);
 }
 
 /* Responsive Design */
@@ -445,7 +411,7 @@ footer {
     flex-direction: column;
   }
 
-  .start-btn, .switch-view-btn {
+  .start-btn {
     width: 100%;
   }
 }
@@ -462,15 +428,6 @@ footer {
 
   nav ul {
     background: rgba(30, 30, 30, 0.95);
-  }
-
-  .switch-view-btn {
-    background: rgba(123, 97, 255, 0.1);
-    color: #7b61ff;
-  }
-
-  .switch-view-btn:hover {
-    background: rgba(123, 97, 255, 0.2);
   }
 }
 </style>

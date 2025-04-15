@@ -1,9 +1,6 @@
 <template>
   <div class="teacher-panel">
-    <button class="mobile-menu-btn" @click="toggleSidebar">
-      <i :class="isSidebarOpen ? 'fas fa-times' : 'fas fa-bars'"></i>
-    </button>
-    <div class="sidebar" :class="{ active: isSidebarOpen }">
+    <div class="sidebar">
       <div class="logo">
         <Logo />
       </div>
@@ -349,14 +346,10 @@ export default {
           date: '2024-03-15',
           status: 'completed'
         }
-      ],
-      isSidebarOpen: false
+      ]
     }
   },
   methods: {
-    toggleSidebar() {
-      this.isSidebarOpen = !this.isSidebarOpen;
-    },
     getActivityIcon(type) {
       const icons = {
         quiz: 'fas fa-question-circle',
@@ -390,6 +383,7 @@ export default {
   min-height: 100vh;
   background: linear-gradient(to right, #f8f9fa, #e3f2fd);
   font-family: "Poppins", sans-serif;
+  overflow: hidden;
 }
 
 .sidebar {
@@ -400,11 +394,12 @@ export default {
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
   padding: 20px 0;
   border-right: 1px solid rgba(255, 255, 255, 0.2);
-  position: fixed;
   height: 100vh;
-  overflow-y: auto;
+  position: fixed;
+  top: 0;
+  left: 0;
   z-index: 1000;
-  transition: all 0.3s ease;
+  overflow-y: auto;
 }
 
 .logo {
@@ -434,8 +429,14 @@ nav li {
 
 nav li i {
   font-size: 1.2rem;
-  width: 24px;
-  text-align: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(74, 144, 226, 0.1);
+  color: #4a90e2;
   transition: all 0.3s ease;
 }
 
@@ -446,29 +447,28 @@ nav li:hover, nav li.active {
 }
 
 nav li:hover i, nav li.active i {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
   transform: scale(1.1);
 }
 
 .main-content {
   flex: 1;
   margin-left: 280px;
+  height: 100vh;
+  overflow-y: auto;
   padding: 30px;
-  transition: all 0.3s ease;
 }
 
 .header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
+  position: sticky;
+  top: 0;
   background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  padding: 20px 30px;
+  padding: 20px;
   border-radius: 15px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  position: sticky;
-  top: 0;
+  margin-bottom: 30px;
   z-index: 900;
 }
 
@@ -629,12 +629,32 @@ nav li:hover i, nav li.active i {
   width: 50px;
   height: 50px;
   border-radius: 12px;
-  background: rgba(74, 144, 226, 0.1);
+  background: linear-gradient(135deg, #4a90e2, #7b61ff);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.5rem;
-  color: #4a90e2;
+  color: white;
+  box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-icon::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  transform: rotate(45deg);
+  animation: shine 3s infinite;
 }
 
 .stat-info h3 {
@@ -730,21 +750,41 @@ nav li:hover i, nav li.active i {
   align-items: center;
   justify-content: center;
   font-size: 1.2rem;
+  box-shadow: 0 4px 15px rgba(74, 144, 226, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.activity-icon::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  transform: rotate(45deg);
+  animation: shine 3s infinite;
 }
 
 .activity-icon.quiz {
-  background: rgba(74, 144, 226, 0.1);
-  color: #4a90e2;
+  background: linear-gradient(135deg, #4a90e2, #7b61ff);
+  color: white;
 }
 
 .activity-icon.student {
-  background: rgba(46, 204, 113, 0.1);
-  color: #2ecc71;
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+  color: white;
 }
 
 .activity-icon.result {
-  background: rgba(231, 76, 60, 0.1);
-  color: #e74c3c;
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: white;
 }
 
 .activity-details p {
@@ -776,57 +816,62 @@ nav li:hover i, nav li.active i {
   color: #4a90e2;
   cursor: pointer;
   transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
 }
 
-.action-btn:hover {
-  background: #4a90e2;
-  color: white;
-  transform: translateY(-3px);
+.action-btn::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  transform: rotate(45deg);
+  animation: shine 3s infinite;
 }
 
 .action-btn i {
   font-size: 1.5rem;
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #4a90e2, #7b61ff);
+  color: white;
+  box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
 }
 
-.action-btn span {
-  font-size: 0.9rem;
-  font-weight: 500;
+.action-btn:hover {
+  background: rgba(74, 144, 226, 0.2);
+  transform: translateY(-3px);
 }
 
+.action-btn:hover i {
+  transform: scale(1.1);
+}
+
+/* Remove mobile menu button styles */
 .mobile-menu-btn {
   display: none;
-  position: fixed;
-  top: 20px;
-  left: 20px;
-  z-index: 1001;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: none;
-  width: 45px;
-  height: 45px;
-  border-radius: 50%;
-  cursor: pointer;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
 }
 
-.mobile-menu-btn i {
-  font-size: 1.2rem;
-  color: #4a90e2;
-  transition: all 0.3s ease;
-}
-
-.mobile-menu-btn:hover {
-  transform: scale(1.1);
-  background: rgba(74, 144, 226, 0.1);
-}
-
-/* Responsive Design */
+/* Update responsive styles */
 @media (max-width: 1024px) {
   .sidebar {
     width: 80px;
-    padding: 20px 0;
+  }
+
+  .main-content {
+    margin-left: 80px;
   }
 
   .logo h2 {
@@ -846,56 +891,49 @@ nav li:hover i, nav li.active i {
     margin: 0;
     font-size: 1.4rem;
   }
-
-  .main-content {
-    margin-left: 80px;
-  }
 }
 
 @media (max-width: 768px) {
   .sidebar {
-    transform: translateX(-100%);
-    transition: transform 0.3s ease;
-  }
-
-  .sidebar.active {
-    transform: translateX(0);
+    width: 100%;
+    height: auto;
+    position: relative;
+    padding: 10px 0;
   }
 
   .main-content {
     margin-left: 0;
+    height: auto;
+  }
+
+  .teacher-panel {
+    flex-direction: column;
+  }
+
+  nav ul {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    padding: 0 20px;
+  }
+
+  nav li {
+    padding: 10px 15px;
+    margin: 0;
+    flex: 1;
+    min-width: 100px;
+    max-width: 150px;
+  }
+
+  nav li span {
+    display: block;
+    font-size: 0.8rem;
   }
 
   .header {
-    flex-direction: column;
-    gap: 15px;
-  }
-
-  .header-left {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .search-bar {
-    width: 100%;
-  }
-
-  .dashboard-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .actions-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .mobile-menu-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    position: relative;
+    margin-top: 20px;
   }
 }
 
@@ -980,6 +1018,374 @@ nav li:hover i, nav li.active i {
 
   .mobile-menu-btn:hover {
     background: rgba(123, 97, 255, 0.1);
+  }
+}
+
+@keyframes shine {
+  0% {
+    transform: translateX(-100%) rotate(45deg);
+  }
+  100% {
+    transform: translateX(100%) rotate(45deg);
+  }
+}
+
+/* Dashboard Section Styles */
+.dashboard {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 15px;
+  padding: 30px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.dashboard h2 {
+  color: #4a90e2;
+  font-size: 2rem;
+  margin-bottom: 20px;
+  position: relative;
+  display: inline-block;
+}
+
+.dashboard h2::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 50px;
+  height: 3px;
+  background: linear-gradient(to right, #4a90e2, #7b61ff);
+  border-radius: 3px;
+}
+
+/* Quizzes Section Styles */
+.quizzes {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 15px;
+  padding: 30px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.quizzes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.quizzes-header h2 {
+  color: #7b61ff;
+  font-size: 2rem;
+  position: relative;
+  display: inline-block;
+}
+
+.quizzes-header h2::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 50px;
+  height: 3px;
+  background: linear-gradient(to right, #7b61ff, #4a90e2);
+  border-radius: 3px;
+}
+
+.create-quiz-btn {
+  background: linear-gradient(to right, #7b61ff, #4a90e2);
+  color: white;
+  padding: 12px 25px;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+}
+
+.create-quiz-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(123, 97, 255, 0.4);
+}
+
+.quizzes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 25px;
+}
+
+.quiz-card {
+  background: white;
+  padding: 25px;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.quiz-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.quiz-card h3 {
+  color: #333;
+  margin-bottom: 10px;
+  font-size: 1.2rem;
+}
+
+.quiz-card p {
+  color: #666;
+  margin-bottom: 15px;
+  font-size: 0.9rem;
+}
+
+.quiz-stats {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.quiz-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.quiz-actions button {
+  padding: 8px 15px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.quiz-actions button:first-child {
+  background: rgba(74, 144, 226, 0.1);
+  color: #4a90e2;
+}
+
+.quiz-actions button:last-child {
+  background: rgba(231, 76, 60, 0.1);
+  color: #e74c3c;
+}
+
+.quiz-actions button:hover {
+  transform: translateY(-2px);
+}
+
+/* Students Section Styles */
+.students {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 15px;
+  padding: 30px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.students h2 {
+  color: #2ecc71;
+  font-size: 2rem;
+  margin-bottom: 30px;
+  position: relative;
+  display: inline-block;
+}
+
+.students h2::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 50px;
+  height: 3px;
+  background: linear-gradient(to right, #2ecc71, #27ae60);
+  border-radius: 3px;
+}
+
+.students-list table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.students-list th {
+  background: rgba(46, 204, 113, 0.1);
+  color: #2ecc71;
+  padding: 15px;
+  text-align: left;
+  font-weight: 500;
+}
+
+.students-list td {
+  padding: 15px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.students-list tr:last-child td {
+  border-bottom: none;
+}
+
+.status {
+  padding: 5px 10px;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.status.active {
+  background: rgba(46, 204, 113, 0.1);
+  color: #2ecc71;
+}
+
+.status.inactive {
+  background: rgba(231, 76, 60, 0.1);
+  color: #e74c3c;
+}
+
+/* Results Section Styles */
+.results {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 15px;
+  padding: 30px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.results h2 {
+  color: #e74c3c;
+  font-size: 2rem;
+  margin-bottom: 30px;
+  position: relative;
+  display: inline-block;
+}
+
+.results h2::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 50px;
+  height: 3px;
+  background: linear-gradient(to right, #e74c3c, #c0392b);
+  border-radius: 3px;
+}
+
+.results-filters {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.results-filters select {
+  padding: 12px 20px;
+  border: 2px solid rgba(231, 76, 60, 0.2);
+  border-radius: 8px;
+  font-size: 1rem;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.results-filters select:focus {
+  outline: none;
+  border-color: #e74c3c;
+  box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
+}
+
+.results-table {
+  background: white;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.results-table th {
+  background: rgba(231, 76, 60, 0.1);
+  color: #e74c3c;
+  padding: 15px;
+  text-align: left;
+  font-weight: 500;
+}
+
+.results-table td {
+  padding: 15px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.results-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Settings Section Styles */
+.settings {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 15px;
+  padding: 30px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.settings h2 {
+  color: #f1c40f;
+  font-size: 2rem;
+  margin-bottom: 30px;
+  position: relative;
+  display: inline-block;
+}
+
+.settings h2::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 50px;
+  height: 3px;
+  background: linear-gradient(to right, #f1c40f, #f39c12);
+  border-radius: 3px;
+}
+
+/* Dark Mode Styles */
+@media (prefers-color-scheme: dark) {
+  .dashboard, .quizzes, .students, .results, .settings {
+    background: rgba(30, 30, 30, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .quiz-card, .students-list table, .results-table {
+    background: rgba(40, 40, 40, 0.8);
+  }
+
+  .quiz-card h3, .students-list td, .results-table td {
+    color: #fff;
+  }
+
+  .quiz-card p, .quiz-stats {
+    color: #aaa;
+  }
+
+  .students-list th {
+    background: rgba(46, 204, 113, 0.2);
+  }
+
+  .results-table th {
+    background: rgba(231, 76, 60, 0.2);
   }
 }
 </style>
