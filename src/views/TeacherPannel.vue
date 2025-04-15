@@ -278,7 +278,7 @@ export default {
     return {
       activeTab: 'dashboard',
       searchQuery: '',
-      teacherName: 'John Doe',
+      teacherName: 'IGNA',
       teacherAvatar: 'https://via.placeholder.com/40',
       totalQuizzes: 12,
       activeStudents: 45,

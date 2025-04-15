@@ -116,7 +116,7 @@ export default {
   data() {
     return {
       userProfile: {
-        name: "John Doe",
+        name: "GENA",
         role: "Student",
         avatar: "https://via.placeholder.com/150",
         quizzesCompleted: 12,
