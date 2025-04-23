@@ -5,6 +5,7 @@ import AboutView from '../views/AboutView.vue'
 import RegistrationView from '../views/RegistrationView.vue'
 import TeacherPannel from '../views/TeacherPannel.vue'
 import StudentView from '../views/StudentView.vue'
+import AdminPanel from '../views/AdminPanel.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -38,6 +39,11 @@ const router = createRouter({
       path: '/student',
       name: 'student',
       component: StudentView,
+    },
+    {
+      path: '/admin-panel',
+      name: 'admin-panel',
+      component: AdminPanel,
     },
     {
       path: '/my-quizzes',

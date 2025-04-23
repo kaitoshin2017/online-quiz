@@ -1,22 +1,62 @@
 <template>
   <div class="student-container">
-    <!-- Header Section -->
-    <header>
+    <!-- Sidebar -->
+    <div class="sidebar" :class="{ active: isSidebarOpen }">
+      <div class="logo">
+        <Logo />
+      </div>
       <nav>
-        <div class="logo">
-          <Logo />
-        </div>
         <ul>
-          <li><router-link to="/">Home</router-link></li>
-          <li><router-link to="/student" class="active">My Quizzes</router-link></li>
-          <li><router-link to="/results">My Results</router-link></li>
-          <li><router-link to="/profile">Profile</router-link></li>
+          <li @click="$router.push('/')" :class="{ active: currentPath === '/' }">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+          </li>
+          <li @click="activeTab = 'quizzes'" :class="{ active: activeTab === 'quizzes' }">
+            <i class="fas fa-question-circle"></i>
+            <span>My Quizzes</span>
+          </li>
+          <li @click="activeTab = 'results'" :class="{ active: activeTab === 'results' }">
+            <i class="fas fa-chart-bar"></i>
+            <span>My Results</span>
+          </li>
+          <li @click="activeTab = 'profile'" :class="{ active: activeTab === 'profile' }">
+            <i class="fas fa-user"></i>
+            <span>Profile</span>
+          </li>
         </ul>
       </nav>
-    </header>
+    </div>
+
+    <!-- Add mobile menu button -->
+    <button class="mobile-menu-btn" @click="toggleSidebar" aria-label="Toggle Menu">
+      <i class="fas fa-bars"></i>
+    </button>
 
     <!-- Main Content -->
-    <main>
+    <div class="main-content">
+      <div class="header">
+        <div class="header-left">
+          <div class="search-bar">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Search quizzes..." v-model="searchQuery">
+          </div>
+          <div class="notifications">
+            <i class="fas fa-bell"></i>
+            <span class="notification-badge">2</span>
+          </div>
+        </div>
+        <div class="user-profile">
+          <div class="user-info">
+            <span class="welcome-text">Welcome back,</span>
+            <span class="user-name">{{ studentName }}</span>
+          </div>
+          <div class="avatar-container">
+            <img :src="studentAvatar" alt="Student Avatar" class="avatar">
+            <div class="status-indicator"></div>
+          </div>
+        </div>
+      </div>
+
       <!-- Available Quizzes Section -->
       <section id="available-quizzes">
         <h2><i class="fas fa-list-alt"></i> Available Quizzes</h2>
@@ -112,12 +152,7 @@
           <i class="fas fa-search"></i> Review Answers
         </button>
       </section>
-    </main>
-
-    <!-- Footer Section -->
-    <footer>
-      <p>© 2025 Online Quiz System.STZ MADE CJ Kai Igna</p>
-    </footer>
+    </div>
   </div>
 </template>
 
@@ -131,6 +166,12 @@ export default {
   },
   data() {
     return {
+      activeTab: 'quizzes',
+      searchQuery: '',
+      studentName: 'John Doe',
+      studentAvatar: 'https://via.placeholder.com/40',
+      isSidebarOpen: false,
+      currentPath: '/',
       availableQuizzes: [
         {
           id: 1,
@@ -160,6 +201,9 @@ export default {
     };
   },
   methods: {
+    toggleSidebar() {
+      this.isSidebarOpen = !this.isSidebarOpen;
+    },
     startQuiz(quiz) {
       this.activeQuiz = {
         ...quiz,
@@ -228,11 +272,172 @@ export default {
 </script>
 
 <style scoped>
-/* Inherit base styles from HomeView */
 .student-container {
+  display: flex;
   min-height: 100vh;
   background: linear-gradient(to right, #f8f9fa, #e3f2fd);
-  font-family: "Poppins", sans-serif;
+}
+
+.sidebar {
+  width: 280px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  padding: 2rem 1.5rem;
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  position: fixed;
+  height: 100vh;
+  transition: all 0.3s ease;
+}
+
+.logo {
+  padding: 1rem 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+nav li {
+  padding: 1rem;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: #64748b;
+  transition: all 0.3s ease;
+}
+
+nav li:hover {
+  background: linear-gradient(145deg, #e2e8ec, #ffffff);
+  color: #0f172a;
+  transform: translateX(5px);
+}
+
+nav li.active {
+  background: linear-gradient(145deg, #3b82f6, #2563eb);
+  color: white;
+}
+
+nav li i {
+  font-size: 1.25rem;
+  width: 24px;
+  text-align: center;
+}
+
+.main-content {
+  flex: 1;
+  margin-left: 280px;
+  padding: 2rem;
+}
+
+/* Mobile menu button */
+.mobile-menu-btn {
+  display: none;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #3b82f6, #2563eb);
+  color: white;
+  border: none;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  z-index: 1001;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+/* Responsive styles */
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 80px;
+  }
+
+  .main-content {
+    margin-left: 80px;
+  }
+
+  nav li span {
+    display: none;
+  }
+
+  nav li {
+    justify-content: center;
+    padding: 12px;
+  }
+
+  nav li i {
+    margin: 0;
+    font-size: 1.4rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    left: -280px;
+    width: 280px;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.95);
+  }
+
+  .sidebar.active {
+    left: 0;
+  }
+
+  .sidebar nav li span {
+    display: inline-block;
+  }
+
+  .sidebar nav li {
+    padding: 1rem;
+    justify-content: flex-start;
+  }
+
+  .main-content {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .mobile-menu-btn {
+    display: flex;
+  }
+}
+
+/* Dark mode styles */
+@media (prefers-color-scheme: dark) {
+  .student-container {
+    background: linear-gradient(to right, #1a1a1a, #2d3436);
+  }
+
+  .sidebar {
+    background: rgba(30, 30, 30, 0.9);
+  }
+
+  nav li {
+    color: #94a3b8;
+  }
+
+  nav li:hover {
+    background: linear-gradient(145deg, #2d3748, #1a202c);
+    color: #fff;
+  }
 }
 
 /* Header styles (same as HomeView) */

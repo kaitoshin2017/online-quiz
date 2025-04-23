@@ -1,13 +1,17 @@
 <template>
   <div class="teacher-panel">
-    <div class="sidebar">
+    <div class="sidebar" :class="{ active: isSidebarOpen }">
       <div class="logo">
         <Logo />
       </div>
       <nav>
         <ul>
-          <li @click="activeTab = 'dashboard'" :class="{ active: activeTab === 'dashboard' }">
+          <li @click="$router.push('/')" :class="{ active: currentPath === '/' }">
             <i class="fas fa-home"></i>
+            <span>Home</span>
+          </li>
+          <li @click="activeTab = 'dashboard'" :class="{ active: activeTab === 'dashboard' }">
+            <i class="fas fa-tachometer-alt"></i>
             <span>Dashboard</span>
           </li>
           <li @click="activeTab = 'quizzes'" :class="{ active: activeTab === 'quizzes' }">
@@ -29,6 +33,11 @@
         </ul>
       </nav>
     </div>
+
+    <!-- Add mobile menu button -->
+    <button class="mobile-menu-btn" @click="toggleSidebar" aria-label="Toggle Menu">
+      <i class="fas fa-bars"></i>
+    </button>
 
     <div class="main-content">
       <div class="header">
@@ -258,6 +267,171 @@
             </table>
           </div>
         </div>
+
+        <!-- Settings Tab -->
+        <div v-if="activeTab === 'settings'" class="settings">
+          <div class="section-header">
+            <h2>Settings</h2>
+            <button class="save-settings-btn" @click="saveSettings">
+              <i class="fas fa-save"></i> Save Changes
+            </button>
+          </div>
+
+          <div class="settings-grid">
+            <!-- Profile Settings -->
+            <div class="settings-card">
+              <div class="settings-card-header">
+                <i class="fas fa-user-circle"></i>
+                <h3>Profile Settings</h3>
+              </div>
+              <div class="settings-card-content">
+                <div class="form-group">
+                  <label>Profile Picture</label>
+                  <div class="avatar-upload">
+                    <img :src="teacherAvatar" alt="Profile Picture" class="preview-avatar">
+                    <button class="upload-btn">
+                      <i class="fas fa-camera"></i>
+                      Change Photo
+                    </button>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Full Name</label>
+                  <input type="text" v-model="teacherName" placeholder="Enter your full name">
+                </div>
+                <div class="form-group">
+                  <label>Email Address</label>
+                  <input type="email" v-model="teacherEmail" placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                  <label>Phone Number</label>
+                  <input type="tel" v-model="teacherPhone" placeholder="Enter your phone number">
+                </div>
+              </div>
+            </div>
+
+            <!-- Notification Settings -->
+            <div class="settings-card">
+              <div class="settings-card-header">
+                <i class="fas fa-bell"></i>
+                <h3>Notification Settings</h3>
+              </div>
+              <div class="settings-card-content">
+                <div class="toggle-group">
+                  <div class="toggle-item">
+                    <div class="toggle-info">
+                      <h4>Email Notifications</h4>
+                      <p>Receive email updates about quiz submissions</p>
+                    </div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" v-model="notifications.email">
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                  <div class="toggle-item">
+                    <div class="toggle-info">
+                      <h4>Quiz Results</h4>
+                      <p>Get notified when students complete quizzes</p>
+                    </div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" v-model="notifications.quizResults">
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                  <div class="toggle-item">
+                    <div class="toggle-info">
+                      <h4>Student Activity</h4>
+                      <p>Receive updates about student progress</p>
+                    </div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" v-model="notifications.studentActivity">
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quiz Preferences -->
+            <div class="settings-card">
+              <div class="settings-card-header">
+                <i class="fas fa-sliders-h"></i>
+                <h3>Quiz Preferences</h3>
+              </div>
+              <div class="settings-card-content">
+                <div class="form-group">
+                  <label>Default Quiz Duration (minutes)</label>
+                  <input type="number" v-model="quizPreferences.defaultDuration" min="5" max="180">
+                </div>
+                <div class="form-group">
+                  <label>Questions Per Page</label>
+                  <select v-model="quizPreferences.questionsPerPage">
+                    <option value="5">5 Questions</option>
+                    <option value="10">10 Questions</option>
+                    <option value="15">15 Questions</option>
+                    <option value="all">All Questions</option>
+                  </select>
+                </div>
+                <div class="toggle-group">
+                  <div class="toggle-item">
+                    <div class="toggle-info">
+                      <h4>Show Timer</h4>
+                      <p>Display countdown timer during quizzes</p>
+                    </div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" v-model="quizPreferences.showTimer">
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                  <div class="toggle-item">
+                    <div class="toggle-info">
+                      <h4>Randomize Questions</h4>
+                      <p>Shuffle questions for each student</p>
+                    </div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" v-model="quizPreferences.randomizeQuestions">
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Theme Settings -->
+            <div class="settings-card">
+              <div class="settings-card-header">
+                <i class="fas fa-paint-brush"></i>
+                <h3>Theme Settings</h3>
+              </div>
+              <div class="settings-card-content">
+                <div class="form-group">
+                  <label>Color Theme</label>
+                  <div class="theme-options">
+                    <button 
+                      v-for="theme in themes" 
+                      :key="theme.name"
+                      :class="['theme-btn', { active: currentTheme === theme.name }]"
+                      :style="{ background: theme.color }"
+                      @click="setTheme(theme.name)">
+                    </button>
+                  </div>
+                </div>
+                <div class="toggle-group">
+                  <div class="toggle-item">
+                    <div class="toggle-info">
+                      <h4>Dark Mode</h4>
+                      <p>Switch between light and dark themes</p>
+                    </div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" v-model="themePreferences.darkMode">
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -346,7 +520,32 @@ export default {
           date: '2024-03-15',
           status: 'completed'
         }
-      ]
+      ],
+      teacherEmail: 'teacher@example.com',
+      teacherPhone: '+1 234 567 890',
+      notifications: {
+        email: true,
+        quizResults: true,
+        studentActivity: false
+      },
+      quizPreferences: {
+        defaultDuration: 45,
+        questionsPerPage: '10',
+        showTimer: true,
+        randomizeQuestions: false
+      },
+      themePreferences: {
+        darkMode: false
+      },
+      currentTheme: 'default',
+      themes: [
+        { name: 'default', color: '#4f46e5' },
+        { name: 'ocean', color: '#0ea5e9' },
+        { name: 'forest', color: '#22c55e' },
+        { name: 'sunset', color: '#f97316' },
+        { name: 'berry', color: '#d946ef' }
+      ],
+      isSidebarOpen: false,
     }
   },
   methods: {
@@ -372,6 +571,17 @@ export default {
     },
     editStudent(student) {
       // Implement student editing logic
+    },
+    saveSettings() {
+      // Implement settings save logic
+      console.log('Settings saved')
+    },
+    setTheme(themeName) {
+      this.currentTheme = themeName
+      // Implement theme change logic
+    },
+    toggleSidebar() {
+      this.isSidebarOpen = !this.isSidebarOpen;
     }
   }
 }
@@ -381,95 +591,82 @@ export default {
 .teacher-panel {
   display: flex;
   min-height: 100vh;
-  background: linear-gradient(to right, #f8f9fa, #e3f2fd);
-  font-family: "Poppins", sans-serif;
-  overflow: hidden;
+  background-color: #f8f9fa;
 }
 
 .sidebar {
   width: 280px;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
-  padding: 20px 0;
-  border-right: 1px solid rgba(255, 255, 255, 0.2);
-  height: 100vh;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  padding: 2rem 1.5rem;
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
   position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 1000;
-  overflow-y: auto;
+  height: 100vh;
+  transition: all 0.3s ease;
 }
 
 .logo {
-  padding: 0 20px;
-  margin-bottom: 30px;
+  padding: 1rem 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 nav ul {
   list-style: none;
   padding: 0;
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 nav li {
-  padding: 15px 20px;
+  padding: 1rem;
+  border-radius: 12px;
   cursor: pointer;
-  transition: all 0.3s ease;
   display: flex;
   align-items: center;
-  gap: 15px;
-  color: #333;
-  margin: 5px 0;
-  border-radius: 8px;
-  position: relative;
-  overflow: hidden;
-}
-
-nav li i {
-  font-size: 1.2rem;
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(74, 144, 226, 0.1);
-  color: #4a90e2;
+  gap: 1rem;
+  color: #64748b;
   transition: all 0.3s ease;
 }
 
-nav li:hover, nav li.active {
-  background: linear-gradient(to right, #4a90e2, #7b61ff);
-  color: white;
+nav li:hover {
+  background: linear-gradient(145deg, #e2e8ec, #ffffff);
+  color: #0f172a;
   transform: translateX(5px);
 }
 
-nav li:hover i, nav li.active i {
-  background: rgba(255, 255, 255, 0.2);
+nav li.active {
+  background: linear-gradient(145deg, #3b82f6, #2563eb);
   color: white;
-  transform: scale(1.1);
+}
+
+nav li i {
+  font-size: 1.25rem;
+  width: 24px;
+  text-align: center;
 }
 
 .main-content {
   flex: 1;
   margin-left: 280px;
-  height: 100vh;
-  overflow-y: auto;
-  padding: 30px;
+  padding: 2rem;
 }
 
 .header {
-  position: sticky;
-  top: 0;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  padding: 20px;
-  border-radius: 15px;
-  margin-bottom: 30px;
-  z-index: 900;
+  background: white;
+  padding: 1.5rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .header-left {
@@ -479,26 +676,25 @@ nav li:hover i, nav li.active i {
 }
 
 .search-bar {
-  position: relative;
+  display: flex;
+  align-items: center;
+  background: #f1f5f9;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
   width: 300px;
 }
 
 .search-bar input {
+  border: none;
+  background: transparent;
+  margin-left: 0.5rem;
+  font-size: 0.95rem;
   width: 100%;
-  padding: 12px 35px 12px 15px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-  font-size: 14px;
-  background: rgba(255, 255, 255, 0.9);
-  transition: all 0.3s ease;
+  color: #64748b;
 }
 
-.search-bar i {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #4a90e2;
+.search-bar input:focus {
+  outline: none;
 }
 
 .notifications {
@@ -525,7 +721,7 @@ nav li:hover i, nav li.active i {
 .user-profile {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 1rem;
 }
 
 .user-info {
@@ -549,23 +745,21 @@ nav li:hover i, nav li.active i {
 }
 
 .avatar {
-  width: 45px;
-  height: 45px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  border: 2px solid #4a90e2;
-  padding: 2px;
-  transition: all 0.3s ease;
+  object-fit: cover;
 }
 
 .status-indicator {
   position: absolute;
-  bottom: 0;
-  right: 0;
+  bottom: 2px;
+  right: 2px;
   width: 12px;
   height: 12px;
-  background: #2ecc71;
-  border-radius: 50%;
+  background: #22c55e;
   border: 2px solid white;
+  border-radius: 50%;
 }
 
 .page-header {
@@ -603,22 +797,20 @@ nav li:hover i, nav li.active i {
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 25px;
-  margin-bottom: 30px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .stat-card {
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  padding: 25px;
-  border-radius: 15px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  background: white;
+  padding: 1.5rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
-  gap: 20px;
-  transition: all 0.3s ease;
+  gap: 1rem;
+  transition: transform 0.3s ease;
 }
 
 .stat-card:hover {
@@ -626,64 +818,43 @@ nav li:hover i, nav li.active i {
 }
 
 .stat-icon {
-  width: 50px;
-  height: 50px;
+  width: 48px;
+  height: 48px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #4a90e2, #7b61ff);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.5rem;
-  color: white;
-  box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
-  position: relative;
-  overflow: hidden;
-}
-
-.stat-icon::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: linear-gradient(
-    45deg,
-    transparent,
-    rgba(255, 255, 255, 0.1),
-    transparent
-  );
-  transform: rotate(45deg);
-  animation: shine 3s infinite;
+  background: #e0f2fe;
+  color: #0284c7;
 }
 
 .stat-info h3 {
+  font-size: 0.875rem;
+  color: #64748b;
   margin: 0;
-  color: #666;
-  font-size: 0.9rem;
-  font-weight: 500;
 }
 
 .stat-info p {
-  margin: 5px 0;
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: #4a90e2;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0.25rem 0;
 }
 
 .trend {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 0.25rem;
 }
 
 .trend.positive {
-  color: #2ecc71;
+  color: #22c55e;
 }
 
 .trend.negative {
-  color: #e74c3c;
+  color: #ef4444;
 }
 
 .dashboard-grid {
@@ -859,165 +1030,215 @@ nav li:hover i, nav li.active i {
   transform: scale(1.1);
 }
 
-/* Remove mobile menu button styles */
-.mobile-menu-btn {
-  display: none;
+/* Responsive Styles */
+@media (min-width: 1536px) {
+  .sidebar {
+    width: 300px;
+  }
+
+  .main-content {
+    margin-left: 300px;
+  }
 }
 
-/* Update responsive styles */
+@media (max-width: 1280px) {
+  .sidebar {
+    width: 260px;
+  }
+
+  .main-content {
+    margin-left: 260px;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 1024px) {
   .sidebar {
     width: 80px;
+    padding: 1.5rem 0.75rem;
+  }
+
+  .sidebar .logo {
+    padding: 0.5rem;
+  }
+
+  .sidebar nav li span {
+    display: none;
+  }
+
+  .sidebar nav li {
+    padding: 0.75rem;
+    justify-content: center;
+  }
+
+  .sidebar nav li i {
+    margin: 0;
+    font-size: 1.25rem;
   }
 
   .main-content {
     margin-left: 80px;
   }
 
-  .logo h2 {
-    display: none;
+  .header {
+    padding: 1rem;
   }
 
-  nav li span {
-    display: none;
-  }
-
-  nav li {
-    justify-content: center;
-    padding: 15px;
-  }
-
-  nav li i {
-    margin: 0;
-    font-size: 1.4rem;
+  .search-bar {
+    width: 200px;
   }
 }
 
 @media (max-width: 768px) {
-  .sidebar {
-    width: 100%;
-    height: auto;
+  .teacher-panel {
     position: relative;
-    padding: 10px 0;
+  }
+
+  .sidebar {
+    position: fixed;
+    left: -280px;
+    width: 280px;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.95);
+    transition: left 0.3s ease;
+  }
+
+  .sidebar.active {
+    left: 0;
+  }
+
+  .sidebar nav li span {
+    display: inline-block;
+  }
+
+  .sidebar nav li {
+    padding: 1rem;
+    justify-content: flex-start;
   }
 
   .main-content {
     margin-left: 0;
-    height: auto;
+    width: 100%;
   }
 
-  .teacher-panel {
+  .header {
     flex-direction: column;
+    gap: 1rem;
   }
 
-  nav ul {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px;
-    padding: 0 20px;
+  .header-left {
+    width: 100%;
+    justify-content: space-between;
   }
 
-  nav li {
-    padding: 10px 15px;
-    margin: 0;
-    flex: 1;
-    min-width: 100px;
-    max-width: 150px;
+  .search-bar {
+    width: 100%;
+    max-width: 300px;
   }
 
-  nav li span {
-    display: block;
-    font-size: 0.8rem;
+  .user-profile {
+    width: 100%;
+    justify-content: flex-end;
   }
 
-  .header {
-    position: relative;
-    margin-top: 20px;
-  }
-}
-
-/* Dark Mode Styles */
-@media (prefers-color-scheme: dark) {
-  .teacher-panel {
-    background: linear-gradient(to right, #1a1a1a, #2d3436);
+  .stats-grid {
+    grid-template-columns: 1fr;
   }
 
-  .sidebar {
-    background: rgba(30, 30, 30, 0.8);
-    border-right: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  nav li {
-    color: #fff;
-  }
-
-  nav li:hover, nav li.active {
-    background: linear-gradient(to right, #7b61ff, #4a90e2);
-  }
-
-  .header {
-    background: rgba(30, 30, 30, 0.8);
-  }
-
-  .search-bar input {
-    background: rgba(40, 40, 40, 0.9);
-    color: #fff;
-    border-color: rgba(255, 255, 255, 0.1);
-  }
-
-  .welcome-text {
-    color: #aaa;
-  }
-
-  .user-name {
-    color: #fff;
-  }
-
-  .stat-card {
-    background: rgba(30, 30, 30, 0.8);
-  }
-
-  .stat-info h3 {
-    color: #aaa;
-  }
-
-  .stat-info p {
-    color: #7b61ff;
-  }
-
-  .recent-activity, .quick-actions {
-    background: rgba(30, 30, 30, 0.8);
-  }
-
-  .activity-details p {
-    color: #fff;
-  }
-
-  .activity-details small {
-    color: #aaa;
-  }
-
-  .action-btn {
-    background: rgba(123, 97, 255, 0.1);
-    color: #7b61ff;
-  }
-
-  .action-btn:hover {
-    background: #7b61ff;
-    color: white;
-  }
-
+  /* Add mobile menu button */
   .mobile-menu-btn {
-    background: rgba(30, 30, 30, 0.8);
-  }
-
-  .mobile-menu-btn i {
-    color: #7b61ff;
+    display: block;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #3b82f6, #2563eb);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    z-index: 1001;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    transition: all 0.3s ease;
   }
 
   .mobile-menu-btn:hover {
-    background: rgba(123, 97, 255, 0.1);
+    transform: scale(1.1);
+  }
+
+  .mobile-menu-btn:active {
+    transform: scale(0.95);
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    padding: 1rem;
+  }
+
+  .user-profile {
+    flex-direction: row-reverse;
+    gap: 0.5rem;
+  }
+
+  .user-info {
+    align-items: flex-start;
+  }
+
+  .welcome-text {
+    font-size: 0.8rem;
+  }
+
+  .user-name {
+    font-size: 0.9rem;
+  }
+
+  .avatar {
+    width: 40px;
+    height: 40px;
+  }
+
+  .dashboard-grid {
+    gap: 1rem;
+  }
+
+  .stat-card {
+    padding: 1rem;
+  }
+
+  .stat-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.25rem;
+  }
+
+  .stat-info p {
+    font-size: 1.25rem;
+  }
+}
+
+/* Dark mode adjustments for responsive design */
+@media (prefers-color-scheme: dark) {
+  @media (max-width: 768px) {
+    .sidebar {
+      background: rgba(30, 41, 59, 0.95);
+    }
+
+    .mobile-menu-btn {
+      background: linear-gradient(145deg, #3b82f6, #2563eb);
+    }
   }
 }
 
@@ -1333,59 +1554,245 @@ nav li:hover i, nav li.active i {
 
 /* Settings Section Styles */
 .settings {
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-radius: 15px;
-  padding: 30px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 24px;
 }
 
-.settings h2 {
-  color: #f1c40f;
-  font-size: 2rem;
-  margin-bottom: 30px;
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+  margin-top: 24px;
+}
+
+.settings-card {
+  background: var(--card-bg, #ffffff);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.settings-card:hover {
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  transform: translateY(-2px);
+}
+
+.settings-card-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.settings-card-header i {
+  font-size: 1.25rem;
+  color: var(--primary-color, #4f46e5);
+}
+
+.settings-card-header h3 {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary, #111827);
+}
+
+.settings-card-content {
+  padding: 20px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary, #4b5563);
+  margin-bottom: 8px;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 6px;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--primary-color, #4f46e5);
+  box-shadow: 0 0 0 2px rgb(79 70 229 / 0.1);
+}
+
+.avatar-upload {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.preview-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.upload-btn {
+  padding: 8px 16px;
+  background: var(--primary-color, #4f46e5);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.upload-btn:hover {
+  background: var(--primary-dark, #4338ca);
+}
+
+.toggle-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.toggle-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.toggle-info h4 {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary, #111827);
+}
+
+.toggle-info p {
+  margin: 4px 0 0;
+  font-size: 0.75rem;
+  color: var(--text-secondary, #4b5563);
+}
+
+.toggle-switch {
   position: relative;
   display: inline-block;
+  width: 44px;
+  height: 24px;
 }
 
-.settings h2::after {
-  content: '';
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
   position: absolute;
-  bottom: -5px;
+  cursor: pointer;
+  top: 0;
   left: 0;
-  width: 50px;
-  height: 3px;
-  background: linear-gradient(to right, #f1c40f, #f39c12);
-  border-radius: 3px;
+  right: 0;
+  bottom: 0;
+  background-color: #e5e7eb;
+  transition: .4s;
+  border-radius: 24px;
 }
 
-/* Dark Mode Styles */
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+  background-color: var(--primary-color, #4f46e5);
+}
+
+input:checked + .toggle-slider:before {
+  transform: translateX(20px);
+}
+
+.theme-options {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.theme-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.theme-btn.active {
+  border-color: var(--primary-color, #4f46e5);
+  transform: scale(1.1);
+}
+
+.save-settings-btn {
+  padding: 10px 20px;
+  background: var(--primary-color, #4f46e5);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.save-settings-btn:hover {
+  background: var(--primary-dark, #4338ca);
+}
+
+/* Dark mode styles */
 @media (prefers-color-scheme: dark) {
-  .dashboard, .quizzes, .students, .results, .settings {
-    background: rgba(30, 30, 30, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+  .settings-card {
+    --card-bg: #1f2937;
+    --border-color: #374151;
+    --text-primary: #f9fafb;
+    --text-secondary: #9ca3af;
   }
 
-  .quiz-card, .students-list table, .results-table {
-    background: rgba(40, 40, 40, 0.8);
+  .form-group input,
+  .form-group select {
+    background: #374151;
+    color: #f9fafb;
   }
 
-  .quiz-card h3, .students-list td, .results-table td {
-    color: #fff;
-  }
-
-  .quiz-card p, .quiz-stats {
-    color: #aaa;
-  }
-
-  .students-list th {
-    background: rgba(46, 204, 113, 0.2);
-  }
-
-  .results-table th {
-    background: rgba(231, 76, 60, 0.2);
+  .toggle-slider {
+    background-color: #4b5563;
   }
 }
 </style>

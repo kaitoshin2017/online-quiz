@@ -68,6 +68,7 @@
             <select id="role" v-model="formData.role" required>
               <option value="student">Student</option>
               <option value="teacher">Teacher</option>
+              <option value="admin">Admin</option>
             </select>
           </div>
 
@@ -118,6 +119,8 @@ export default {
       
       if (this.formData.role === 'teacher') {
         this.$router.push('/teacher-panel');
+      } else if (this.formData.role === 'admin') {
+        this.$router.push('/admin-panel');
       } else {
         this.$router.push('/student');
       }
