@@ -25,7 +25,40 @@
         </div>
 
         <form @submit.prevent="handleSubmit" class="registration-form">
+          <!-- Error Message -->
+          <div v-if="error" class="error-message">
+            {{ error }}
+          </div>
+
           <div class="form-grid">
+            <div class="form-group">
+              <label for="username">
+                <i class="fas fa-user"></i>
+                Username
+              </label>
+              <input 
+                type="text" 
+                id="username" 
+                v-model="formData.username" 
+                placeholder="Choose a username"
+                required
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="email">
+                <i class="fas fa-envelope"></i>
+                Email
+              </label>
+              <input 
+                type="email" 
+                id="email" 
+                v-model="formData.email" 
+                placeholder="Enter your email"
+                required
+              >
+            </div>
+
             <div class="form-group">
               <label for="firstName">
                 <i class="fas fa-user"></i>
@@ -34,7 +67,7 @@
               <input 
                 type="text" 
                 id="firstName" 
-                v-model="formData.firstName" 
+                v-model="formData.profile.firstName" 
                 placeholder="Enter your first name"
                 required
               >
@@ -48,63 +81,10 @@
               <input 
                 type="text" 
                 id="lastName" 
-                v-model="formData.lastName" 
+                v-model="formData.profile.lastName" 
                 placeholder="Enter your last name"
                 required
               >
-            </div>
-
-            <div class="form-group">
-              <label for="section">
-                <i class="fas fa-users"></i>
-                Section
-              </label>
-              <input 
-                type="text" 
-                id="section" 
-                v-model="formData.section" 
-                placeholder="Enter your section"
-                required
-              >
-            </div>
-
-            <div class="form-group">
-              <label for="birthDate">
-                <i class="fas fa-calendar"></i>
-                Birth Date
-              </label>
-              <input 
-                type="date" 
-                id="birthDate" 
-                v-model="formData.birthDate" 
-                required
-              >
-            </div>
-
-            <div class="form-group">
-              <label for="profilePicture">
-                <i class="fas fa-camera"></i>
-                Profile Picture
-              </label>
-              <div class="file-upload">
-                <input 
-                  type="file" 
-                  id="profilePicture" 
-                  @change="handleFileUpload" 
-                  accept="image/*"
-                  ref="fileInput"
-                >
-                <div class="upload-preview" v-if="formData.profilePicture">
-                  <img :src="formData.profilePicture" alt="Profile Preview">
-                  <button type="button" class="remove-image" @click="removeImage">
-                    <i class="fas fa-times"></i>
-                  </button>
-                </div>
-                <div class="upload-placeholder" v-else>
-                  <i class="fas fa-cloud-upload-alt"></i>
-                  <span>Click to upload</span>
-                </div>
-              </div>
             </div>
 
             <div class="form-group">
@@ -117,7 +97,7 @@
                   :type="showPassword ? 'text' : 'password'" 
                   id="password" 
                   v-model="formData.password" 
-                  placeholder="Enter your password"
+                  placeholder="Choose a password"
                   required
                 >
                 <i 
@@ -149,15 +129,16 @@
           </div>
 
           <div class="form-actions">
-            <button type="button" class="cancel-btn" @click="handleCancel">
+            <button type="button" class="cancel-btn" @click="handleCancel" :disabled="loading">
               <i class="fas fa-times"></i> Cancel
             </button>
             <button 
               type="submit" 
               class="submit-btn"
-              :disabled="!isFormValid"
+              :disabled="!isFormValid || loading"
             >
-              <i class="fas fa-user-plus"></i> Create Account
+              <i class="fas fa-user-plus"></i>
+              {{ loading ? 'Creating Account...' : 'Create Account' }}
             </button>
           </div>
         </form>
@@ -173,84 +154,113 @@
 
 <script>
 import Logo from '../components/Logo.vue'
+import { useAuthStore } from '../stores/auth'
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 
 export default {
   name: "RegistrationView",
   components: {
     Logo
   },
-  data() {
-    return {
-      formData: {
+  setup() {
+    const authStore = useAuthStore()
+    const router = useRouter()
+    const error = ref('')
+    const loading = ref(false)
+    const fileInput = ref(null)
+
+    const formData = ref({
+      username: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      role: 'student',
+      profile: {
         firstName: '',
-        lastName: '',
-        section: '',
-        birthDate: '',
-        profilePicture: null,
-        password: '',
-        confirmPassword: ''
-      },
-      showPassword: false
-    };
-  },
-  computed: {
-    passwordsMatch() {
-      return this.formData.password === this.formData.confirmPassword;
-    },
-    isFormValid() {
+        lastName: ''
+      }
+    })
+
+    const showPassword = ref(false)
+
+    const passwordsMatch = computed(() => {
+      return formData.value.password === formData.value.confirmPassword
+    })
+
+    const isFormValid = computed(() => {
       return (
-        this.formData.firstName &&
-        this.formData.lastName &&
-        this.formData.section &&
-        this.formData.birthDate &&
-        this.formData.password &&
-        this.formData.confirmPassword &&
-        this.passwordsMatch
-      );
+        formData.value.username &&
+        formData.value.email &&
+        formData.value.password &&
+        formData.value.confirmPassword &&
+        formData.value.profile.firstName &&
+        formData.value.profile.lastName &&
+        passwordsMatch.value
+      )
+    })
+
+    const togglePassword = () => {
+      showPassword.value = !showPassword.value
     }
-  },
-  methods: {
-    handleFileUpload(event) {
-      const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          this.formData.profilePicture = e.target.result;
-        };
-        reader.readAsDataURL(file);
+
+    const handleSubmit = async () => {
+      if (!isFormValid.value) return
+
+      try {
+        loading.value = true
+        error.value = ''
+
+        await authStore.register({
+          username: formData.value.username,
+          email: formData.value.email,
+          password: formData.value.password,
+          role: formData.value.role,
+          profile: {
+            firstName: formData.value.profile.firstName,
+            lastName: formData.value.profile.lastName
+          }
+        })
+
+        // Registration successful, redirect to login
+        router.push('/login')
+      } catch (err) {
+        error.value = err.response?.data?.message || 'Registration failed. Please try again.'
+      } finally {
+        loading.value = false
       }
-    },
-    removeImage() {
-      this.formData.profilePicture = null;
-      this.$refs.fileInput.value = '';
-    },
-    togglePassword() {
-      this.showPassword = !this.showPassword;
-    },
-    handleSubmit() {
-      if (this.isFormValid) {
-        console.log('Registration data:', this.formData);
-        // Here you would typically send the data to your backend
-        this.$router.push('/login');
-      }
-    },
-    handleCancel() {
-      this.formData = {
-        firstName: '',
-        lastName: '',
-        section: '',
-        birthDate: '',
-        profilePicture: null,
+    }
+
+    const handleCancel = () => {
+      formData.value = {
+        username: '',
+        email: '',
         password: '',
-        confirmPassword: ''
-      };
-      this.showPassword = false;
-      if (this.$refs.fileInput) {
-        this.$refs.fileInput.value = '';
+        confirmPassword: '',
+        role: 'student',
+        profile: {
+          firstName: '',
+          lastName: ''
+        }
       }
+      showPassword.value = false
+      error.value = ''
+    }
+
+    return {
+      formData,
+      showPassword,
+      error,
+      loading,
+      fileInput,
+      passwordsMatch,
+      isFormValid,
+      togglePassword,
+      handleSubmit,
+      handleCancel
     }
   }
-};
+}
 </script>
 
 <style scoped>
@@ -479,9 +489,19 @@ input:focus {
 }
 
 .error-message {
-  color: #e74c3c;
+  background-color: #fee2e2;
+  color: #dc2626;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 20px;
   font-size: 0.9rem;
-  margin-top: 5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.error-message::before {
+  content: '⚠️';
 }
 
 /* Form Actions */

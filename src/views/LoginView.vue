@@ -25,16 +25,21 @@
         </div>
 
         <form @submit.prevent="handleSubmit" class="login-form">
+          <!-- Error Message -->
+          <div v-if="error" class="error-message">
+            {{ error }}
+          </div>
+
           <div class="form-group">
-            <label for="username">
-              <i class="fas fa-user"></i>
-              Username
+            <label for="email">
+              <i class="fas fa-envelope"></i>
+              Email
             </label>
             <input 
-              type="text" 
-              id="username" 
-              v-model="formData.username" 
-              placeholder="Enter your username"
+              type="email" 
+              id="email" 
+              v-model="formData.email" 
+              placeholder="Enter your email"
               required
             >
           </div>
@@ -73,11 +78,12 @@
           </div>
 
           <div class="form-actions">
-            <button type="button" class="cancel-btn" @click="handleCancel">
+            <button type="button" class="cancel-btn" @click="handleCancel" :disabled="loading">
               <i class="fas fa-times"></i> Cancel
             </button>
-            <button type="submit" class="submit-btn">
-              <i class="fas fa-sign-in-alt"></i> Login
+            <button type="submit" class="submit-btn" :disabled="loading">
+              <i class="fas fa-sign-in-alt"></i> 
+              {{ loading ? 'Logging in...' : 'Login' }}
             </button>
           </div>
         </form>
@@ -93,48 +99,80 @@
 
 <script>
 import Logo from '../components/Logo.vue'
+import { useAuthStore } from '../stores/auth'
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 export default {
   name: "LoginView",
   components: {
     Logo
   },
-  data() {
-    return {
-      formData: {
-        username: '',
-        password: '',
-        role: 'student'
-      },
-      showPassword: false
-    };
-  },
-  methods: {
-    togglePassword() {
-      this.showPassword = !this.showPassword;
-    },
-    handleSubmit() {
-      // Here you would typically validate credentials with your backend
-      console.log('Login attempt:', this.formData);
-      
-      if (this.formData.role === 'teacher') {
-        this.$router.push('/teacher-panel');
-      } else if (this.formData.role === 'admin') {
-        this.$router.push('/admin-panel');
-      } else {
-        this.$router.push('/student');
+  setup() {
+    const authStore = useAuthStore()
+    const router = useRouter()
+    const error = ref('')
+    const loading = ref(false)
+
+    const formData = ref({
+      email: '',
+      password: '',
+      role: 'student'
+    })
+
+    const showPassword = ref(false)
+
+    const togglePassword = () => {
+      showPassword.value = !showPassword.value
+    }
+
+    const handleSubmit = async () => {
+      try {
+        loading.value = true
+        error.value = ''
+        
+        await authStore.login({
+          email: formData.value.email,
+          password: formData.value.password
+        })
+
+        // Redirect based on user role
+        const role = authStore.userRole
+        if (role === 'teacher') {
+          router.push('/teacher-panel')
+        } else if (role === 'admin') {
+          router.push('/admin-panel')
+        } else {
+          router.push('/student')
+        }
+      } catch (err) {
+        error.value = err.response?.data?.message || 'Login failed. Please try again.'
+      } finally {
+        loading.value = false
       }
-    },
-    handleCancel() {
-      this.formData = {
-        username: '',
+    }
+
+    const handleCancel = () => {
+      formData.value = {
+        email: '',
         password: '',
         role: 'student'
-      };
-      this.showPassword = false;
+      }
+      showPassword.value = false
+      error.value = ''
+    }
+
+    return {
+      formData,
+      showPassword,
+      error,
+      loading,
+      togglePassword,
+      handleSubmit,
+      handleCancel
     }
   }
-};
+}
 </script>
 
 <style scoped>
@@ -402,5 +440,26 @@ input:focus, select:focus {
     width: 100%;
     justify-content: center;
   }
+}
+
+.error-message {
+  background-color: #fee2e2;
+  color: #dc2626;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.error-message::before {
+  content: '⚠️';
+}
+
+button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 </style>

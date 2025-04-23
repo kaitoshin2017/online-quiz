@@ -1400,7 +1400,7 @@ section {
 .profile-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
+    gap: 20px;
   margin: 30px 0;
 }
 
@@ -1420,7 +1420,7 @@ section {
 
 .stat-info {
   display: flex;
-  flex-direction: column;
+    flex-direction: column;
 }
 
 .stat-value {
@@ -1436,7 +1436,7 @@ section {
 
 .profile-actions {
   display: flex;
-  gap: 15px;
+    gap: 15px;
   margin-top: 30px;
 }
 
