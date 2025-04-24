@@ -1,12 +1,21 @@
 <template>
   <div class="registration-container">
+    <!-- Sidebar -->
+    <Sidebar :isOpen="isSidebarOpen" @close="isSidebarOpen = false" />
+    
+    <!-- Overlay for mobile -->
+    <div class="overlay" :class="{ 'overlay-open': isSidebarOpen }" @click="isSidebarOpen = false"></div>
+
     <!-- Header Section -->
     <header>
       <nav>
         <div class="logo">
           <Logo />
         </div>
-        <ul>
+        <button class="menu-btn" @click="isSidebarOpen = true">
+          <i class="fas fa-bars"></i>
+        </button>
+        <ul class="desktop-nav">
           <li><router-link to="/">Home</router-link></li>
           <li><router-link to="/login">Login</router-link></li>
           <li><router-link to="/signup" class="active">Sign Up</router-link></li>
@@ -154,6 +163,7 @@
 
 <script>
 import Logo from '../components/Logo.vue'
+import Sidebar from '../components/Sidebar.vue'
 import { useAuthStore } from '../stores/auth'
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
@@ -161,14 +171,15 @@ import { useRouter } from 'vue-router'
 export default {
   name: "RegistrationView",
   components: {
-    Logo
+    Logo,
+    Sidebar
   },
   setup() {
     const authStore = useAuthStore()
     const router = useRouter()
     const error = ref('')
     const loading = ref(false)
-    const fileInput = ref(null)
+    const isSidebarOpen = ref(false)
 
     const formData = ref({
       username: '',
@@ -252,7 +263,7 @@ export default {
       showPassword,
       error,
       loading,
-      fileInput,
+      isSidebarOpen,
       passwordsMatch,
       isFormValid,
       togglePassword,
@@ -270,7 +281,26 @@ export default {
   font-family: "Poppins", sans-serif;
 }
 
-/* Header styles (same as other views) */
+/* Overlay for mobile */
+.overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.overlay-open {
+  display: block;
+  opacity: 1;
+}
+
+/* Header styles */
 header {
   background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(12px);
@@ -278,6 +308,9 @@ header {
   padding: 1.5rem 2.5rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 nav {
@@ -288,7 +321,34 @@ nav {
   margin: 0 auto;
 }
 
-nav ul {
+/* Menu Button for Mobile */
+.menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #333;
+  padding: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.menu-btn:hover {
+  color: #4a90e2;
+  transform: scale(1.1);
+}
+
+.logo h1 {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(to right, #4a90e2, #7b61ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Navigation Styles */
+.desktop-nav {
   list-style-type: none;
   margin: 0;
   padding: 0;
@@ -296,18 +356,43 @@ nav ul {
   gap: 25px;
 }
 
-nav ul li a {
+.desktop-nav li a {
   text-decoration: none;
   color: #333;
   font-size: 1rem;
   padding: 8px 15px;
   border-radius: 8px;
   transition: all 0.3s ease;
+  position: relative;
+  font-weight: 500;
 }
 
-nav ul li a:hover, nav ul li a.active {
+.desktop-nav li a::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(to right, #4a90e2, #7b61ff);
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+}
+
+.desktop-nav li a:hover::after {
+  width: 80%;
+}
+
+.desktop-nav li a:hover {
   color: #4a90e2;
-  background: rgba(74, 144, 226, 0.1);
+}
+
+.desktop-nav li a.active {
+  color: #4a90e2;
+}
+
+.desktop-nav li a.active::after {
+  width: 80%;
 }
 
 /* Main Content Styles */
@@ -330,305 +415,183 @@ main {
 }
 
 .registration-header {
-  display: flex;
-  align-items: center;
-  gap: 20px;
   margin-bottom: 30px;
-}
-
-.back-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 15px;
-  background: rgba(74, 144, 226, 0.1);
-  color: #4a90e2;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.back-btn:hover {
-  transform: translateX(-5px);
-  background: rgba(74, 144, 226, 0.2);
+  text-align: center;
 }
 
 .registration-header h2 {
   color: #4a90e2;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  font-size: 2rem;
+  margin: 20px 0;
 }
 
-/* Form Styles */
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
-  margin-bottom: 30px;
-}
-
-.form-group {
-  margin-bottom: 20px;
-}
-
-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-  color: #333;
-  font-weight: 500;
-}
-
-label i {
-  color: #4a90e2;
-}
-
-input {
-  width: 85%;
-  padding: 12px;
-  border: 2px solid rgba(74, 144, 226, 0.2);
-  border-radius: 8px;
+.back-btn {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
   font-size: 1rem;
   transition: all 0.3s ease;
 }
 
-input:focus {
+.back-btn:hover {
+  color: #4a90e2;
+}
+
+.back-btn i {
+  margin-right: 5px;
+}
+
+/* Form Styles */
+.registration-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  color: #333;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.form-group label i {
+  color: #4a90e2;
+}
+
+.form-group input,
+.form-group select {
+  padding: 12px 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.form-group input:focus,
+.form-group select:focus {
   outline: none;
   border-color: #4a90e2;
   box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
 }
 
-/* File Upload Styles */
-.file-upload {
-  position: relative;
-  width: 100%;
-}
-
-.file-upload input[type="file"] {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  cursor: pointer;
-}
-
-.upload-placeholder {
-  border: 2px dashed rgba(74, 144, 226, 0.2);
-  border-radius: 8px;
-  padding: 20px;
-  text-align: center;
-  color: #666;
-  transition: all 0.3s ease;
-}
-
-.upload-placeholder:hover {
-  border-color: #4a90e2;
-  background: rgba(74, 144, 226, 0.05);
-}
-
-.upload-placeholder i {
-  font-size: 2rem;
-  color: #4a90e2;
-  margin-bottom: 10px;
-}
-
-.upload-preview {
-  position: relative;
-  width: 100%;
-  height: 150px;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.upload-preview img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.remove-image {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: rgba(255, 255, 255, 0.9);
-  border: none;
-  border-radius: 50%;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: #e74c3c;
-  transition: all 0.3s ease;
-}
-
-.remove-image:hover {
-  background: #e74c3c;
-  color: white;
-}
-
-/* Password Input Styles */
 .password-input-wrapper {
   position: relative;
 }
 
 .password-toggle {
   position: absolute;
-  right: 12px;
+  right: 15px;
   top: 50%;
   transform: translateY(-50%);
   cursor: pointer;
+  color: #666;
+  transition: color 0.3s ease;
+}
+
+.password-toggle:hover {
   color: #4a90e2;
 }
 
 .error-message {
-  background-color: #fee2e2;
-  color: #dc2626;
-  padding: 12px;
-  border-radius: 8px;
-  margin-bottom: 20px;
+  color: #dc3545;
   font-size: 0.9rem;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  margin-top: 5px;
 }
 
-.error-message::before {
-  content: '⚠️';
-}
-
-/* Form Actions */
 .form-actions {
   display: flex;
-  gap: 15px;
   justify-content: flex-end;
-  margin-top: 30px;
+  gap: 15px;
+  margin-top: 20px;
 }
 
-.cancel-btn, .submit-btn {
+.cancel-btn,
+.submit-btn {
   padding: 12px 25px;
-  border: none;
   border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
   cursor: pointer;
+  transition: all 0.3s ease;
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 1rem;
-  transition: all 0.3s ease;
 }
 
 .cancel-btn {
-  background: rgba(74, 144, 226, 0.1);
-  color: #4a90e2;
+  background: #f8f9fa;
+  border: 1px solid #ddd;
+  color: #666;
+}
+
+.cancel-btn:hover {
+  background: #e9ecef;
+  color: #333;
 }
 
 .submit-btn {
   background: linear-gradient(to right, #4a90e2, #7b61ff);
+  border: none;
   color: white;
+}
+
+.submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
 }
 
 .submit-btn:disabled {
   opacity: 0.7;
   cursor: not-allowed;
+  transform: none;
 }
 
-.cancel-btn:hover, .submit-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
-}
-
-/* Dark Mode Styles */
-:global(.dark-mode) .registration-container {
-  background: linear-gradient(to right, #1a1a1a, #2d3436);
-}
-
-:global(.dark-mode) header {
-  background: rgba(30, 30, 30, 0.8);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-:global(.dark-mode) nav ul li a {
-  color: #fff;
-}
-
-:global(.dark-mode) nav ul li a:hover,
-:global(.dark-mode) nav ul li a.active {
-  color: #7b61ff;
-  background: rgba(123, 97, 255, 0.1);
-}
-
-:global(.dark-mode) .registration-section {
-  background: rgba(30, 30, 30, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-:global(.dark-mode) .back-btn {
-  background: rgba(123, 97, 255, 0.1);
-  color: #7b61ff;
-}
-
-:global(.dark-mode) .back-btn:hover {
-  background: rgba(123, 97, 255, 0.2);
-}
-
-:global(.dark-mode) label {
-  color: #fff;
-}
-
-:global(.dark-mode) input {
-  background: rgba(40, 40, 40, 0.9);
-  border-color: rgba(255, 255, 255, 0.1);
-  color: #fff;
-}
-
-:global(.dark-mode) input:focus {
-  border-color: #7b61ff;
-  box-shadow: 0 0 0 3px rgba(123, 97, 255, 0.1);
-}
-
-:global(.dark-mode) .upload-placeholder {
-  border-color: rgba(255, 255, 255, 0.1);
-  color: #aaa;
-}
-
-:global(.dark-mode) .upload-placeholder:hover {
-  border-color: #7b61ff;
-  background: rgba(123, 97, 255, 0.05);
-}
-
-:global(.dark-mode) .remove-image {
-  background: rgba(0, 0, 0, 0.7);
-  color: #e74c3c;
-}
-
-:global(.dark-mode) .remove-image:hover {
-  background: #e74c3c;
-  color: white;
-}
-
-:global(.dark-mode) .cancel-btn {
-  background: rgba(123, 97, 255, 0.1);
-  color: #7b61ff;
+/* Footer Styles */
+footer {
+  text-align: center;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  nav {
-    flex-direction: column;
-    gap: 20px;
+  .menu-btn {
+    display: block;
   }
 
-  nav ul {
-    flex-direction: column;
-    gap: 15px;
-    text-align: center;
+  .desktop-nav {
+    display: none;
+  }
+
+  header {
+    padding: 1rem;
+  }
+
+  .logo h1 {
+    font-size: 1.5rem;
+  }
+
+  .registration-section {
+    padding: 20px;
   }
 
   .form-grid {
@@ -639,9 +602,26 @@ input:focus {
     flex-direction: column;
   }
 
-  .cancel-btn, .submit-btn {
+  .cancel-btn,
+  .submit-btn {
     width: 100%;
     justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .registration-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .form-group input,
+  .form-group select {
+    padding: 10px 12px;
+  }
+
+  .cancel-btn,
+  .submit-btn {
+    padding: 10px 20px;
   }
 }
 </style>

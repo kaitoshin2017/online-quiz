@@ -1,15 +1,21 @@
 <template>
   <div id="app">
+    <!-- Sidebar -->
+    <Sidebar :isOpen="isSidebarOpen" @close="isSidebarOpen = false" />
+    
+    <!-- Overlay for mobile -->
+    <div class="overlay" :class="{ 'overlay-open': isSidebarOpen }" @click="isSidebarOpen = false"></div>
+
     <!-- Header Section -->
     <header>
       <nav>
         <div class="logo">
           <Logo />
         </div>
-        <button class="menu-btn" @click="toggleMenu">
-          <i :class="isMenuOpen ? 'fas fa-times' : 'fas fa-bars'"></i>
+        <button class="menu-btn" @click="isSidebarOpen = true">
+          <i class="fas fa-bars"></i>
         </button>
-        <ul :class="{ 'menu-open': isMenuOpen }">
+        <ul class="desktop-nav">
           <li><router-link to="/" class="active">Home</router-link></li>
           <li><router-link to="/about">About</router-link></li>
           <li><router-link to="/faq">FAQ</router-link></li>
@@ -50,20 +56,17 @@
 
 <script>
 import Logo from '../components/Logo.vue'
+import Sidebar from '../components/Sidebar.vue'
 
 export default {
   name: "HomeView",
   components: {
-    Logo
+    Logo,
+    Sidebar
   },
   data() {
     return {
-      isMenuOpen: false
-    }
-  },
-  methods: {
-    toggleMenu() {
-      this.isMenuOpen = !this.isMenuOpen;
+      isSidebarOpen: false
     }
   }
 };
@@ -81,6 +84,25 @@ body {
   transition: all 0.3s ease;
 }
 
+/* Overlay for mobile */
+.overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.overlay-open {
+  display: block;
+  opacity: 1;
+}
+
 /* Header with Glassmorphism */
 header {
   background: rgba(255, 255, 255, 0.8);
@@ -90,6 +112,9 @@ header {
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 /* Flexbox for Header */
@@ -112,8 +137,25 @@ nav {
   transition: all 0.3s ease;
 }
 
+/* Menu Button for Mobile */
+.menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #333;
+  padding: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.menu-btn:hover {
+  color: #4a90e2;
+  transform: scale(1.1);
+}
+
 /* Navigation Styles */
-nav ul {
+.desktop-nav {
   list-style-type: none;
   margin: 0;
   padding: 0;
@@ -122,7 +164,7 @@ nav ul {
 }
 
 /* Navigation Links */
-nav ul li a {
+.desktop-nav li a {
   text-decoration: none;
   color: #333;
   font-size: 1rem;
@@ -130,9 +172,10 @@ nav ul li a {
   border-radius: 8px;
   transition: all 0.3s ease-in-out;
   position: relative;
+  font-weight: 500;
 }
 
-nav ul li a::after {
+.desktop-nav li a::after {
   content: '';
   position: absolute;
   bottom: 0;
@@ -144,7 +187,19 @@ nav ul li a::after {
   transform: translateX(-50%);
 }
 
-nav ul li a:hover::after {
+.desktop-nav li a:hover::after {
+  width: 80%;
+}
+
+.desktop-nav li a:hover {
+  color: #4a90e2;
+}
+
+.desktop-nav li a.active {
+  color: #4a90e2;
+}
+
+.desktop-nav li a.active::after {
   width: 80%;
 }
 
@@ -251,135 +306,14 @@ h2::after {
   left: 100%;
 }
 
-.start-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4);
-}
-
 /* Footer Styles */
 footer {
-  background: linear-gradient(to right, #4a90e2, #7b61ff);
-  color: white;
   text-align: center;
-  padding: 20px 0;
-  position: relative;
-  bottom: 0;
-  width: 100%;
-  font-size: 0.9rem;
-  box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.1);
-}
-
-/* Dark Mode Styles */
-@media (prefers-color-scheme: dark) {
-  html,
-  body {
-    background: linear-gradient(to right, #1a1a1a, #2d3436);
-    color: #fff;
-  }
-
-  header {
-    background: rgba(30, 30, 30, 0.8);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  .logo h1 {
-    background: linear-gradient(to right, #7b61ff, #4a90e2);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-
-  nav ul li a {
-    color: #fff;
-  }
-
-  nav ul li a::after {
-    background: linear-gradient(to right, #7b61ff, #4a90e2);
-  }
-
-  section {
-    background: rgba(30, 30, 30, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  #home h1 {
-    background: linear-gradient(to right, #7b61ff, #4a90e2);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-
-  #home p {
-    color: #aaa;
-  }
-
-  h2 {
-    color: #7b61ff;
-  }
-
-  h2::after {
-    background: linear-gradient(to right, #7b61ff, #4a90e2);
-  }
-
-  .start-btn {
-    background: linear-gradient(to right, #7b61ff, #4a90e2);
-  }
-}
-
-/* Responsive Design for Mobile */
-@media (max-width: 768px) {
-  nav {
-    flex-direction: column;
-    gap: 20px;
-  }
-
-  nav ul {
-    flex-direction: column;
-    gap: 15px;
-    text-align: center;
-  }
-
-  main {
-    padding: 20px;
-  }
-
-  section {
-    padding: 20px;
-  }
-
-  #home h1 {
-    font-size: 2rem;
-  }
-
-  #home p {
-    font-size: 1rem;
-  }
-
-  .start-btn {
-    padding: 12px 25px;
-    font-size: 1rem;
-  }
-}
-
-/* Menu Button Styles */
-.menu-btn {
-  display: none;
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  color: #4a90e2;
-  cursor: pointer;
-  padding: 8px;
-  transition: all 0.3s ease;
-}
-
-.menu-btn:hover {
-  color: #7b61ff;
-}
-
-/* CTA Buttons */
-.cta-buttons {
-  display: flex;
-  justify-content: center;
-  margin-top: 20px;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 /* Responsive Design */
@@ -388,46 +322,48 @@ footer {
     display: block;
   }
 
-  nav ul {
+  .desktop-nav {
     display: none;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+  }
+
+  header {
+    padding: 1rem;
+  }
+
+  .logo h1 {
+    font-size: 1.5rem;
+  }
+
+  #home h1 {
+    font-size: 2rem;
+  }
+
+  section {
     padding: 20px;
-    flex-direction: column;
-    gap: 15px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  }
-
-  nav ul.menu-open {
-    display: flex;
-  }
-
-  .cta-buttons {
-    flex-direction: column;
+    margin-bottom: 20px;
   }
 
   .start-btn {
-    width: 100%;
+    padding: 12px 24px;
+    font-size: 1rem;
   }
 }
 
-/* Dark Mode Styles */
-@media (prefers-color-scheme: dark) {
-  .menu-btn {
-    color: #7b61ff;
+@media (max-width: 480px) {
+  #home h1 {
+    font-size: 1.5rem;
   }
 
-  .menu-btn:hover {
-    color: #4a90e2;
+  #home p {
+    font-size: 1rem;
   }
 
-  nav ul {
-    background: rgba(30, 30, 30, 0.95);
+  h2 {
+    font-size: 1.5rem;
+  }
+
+  section {
+    padding: 15px;
   }
 }
 </style>
