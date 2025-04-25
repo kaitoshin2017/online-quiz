@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'http://localhost:5001/api';
 
 const api = axios.create({
     baseURL: API_URL,
@@ -18,9 +18,9 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
-export const auth = {
-    register: async (userData) => {
-        const response = await api.post('/auth/register', userData);
+export const authService = {
+    async login(email, password) {
+        const response = await api.post('/auth/login', { email, password });
         if (response.data.token) {
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('user', JSON.stringify(response.data.user));
@@ -28,28 +28,30 @@ export const auth = {
         return response.data;
     },
 
-    login: async (credentials) => {
-        const response = await api.post('/auth/login', credentials);
-        if (response.data.token) {
-            localStorage.setItem('token', response.data.token);
-            localStorage.setItem('user', JSON.stringify(response.data.user));
-        }
+    async signup(formData) {
+        const response = await api.post('/auth/signup', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
         return response.data;
     },
 
-    logout: () => {
+    logout() {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
     },
 
-    getCurrentUser: () => {
+    getCurrentUser() {
         const user = localStorage.getItem('user');
         return user ? JSON.parse(user) : null;
-    },
-
-    getToken: () => {
-        return localStorage.getItem('token');
     }
+};
+
+export const studentService = {
+    getProfile: () => api.get('/student/profile'),
+    updateProfile: (profileData) => api.put('/student/profile', profileData),
+    getDashboard: () => api.get('/student/dashboard')
 };
 
 export const quizzes = {

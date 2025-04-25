@@ -1,12 +1,13 @@
 import { defineStore } from 'pinia';
-import { auth } from '../services/api';
+import { authService, studentService } from '../services/api';
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
         user: null,
         token: null,
         loading: false,
-        error: null
+        error: null,
+        dashboard: null
     }),
 
     getters: {
@@ -19,11 +20,14 @@ export const useAuthStore = defineStore('auth', {
 
     actions: {
         async initialize() {
-            const token = auth.getToken();
-            const user = auth.getCurrentUser();
+            const user = authService.getCurrentUser();
+            const token = localStorage.getItem('token');
             if (token && user) {
                 this.token = token;
                 this.user = user;
+                if (user.role === 'student') {
+                    await this.fetchDashboard();
+                }
             }
         },
 
@@ -31,7 +35,7 @@ export const useAuthStore = defineStore('auth', {
             this.loading = true;
             this.error = null;
             try {
-                const response = await auth.register(userData);
+                const response = await authService.signup(userData);
                 this.user = response.user;
                 this.token = response.token;
                 return response;
@@ -47,9 +51,14 @@ export const useAuthStore = defineStore('auth', {
             this.loading = true;
             this.error = null;
             try {
-                const response = await auth.login(credentials);
+                const response = await authService.login(credentials.email, credentials.password);
                 this.user = response.user;
                 this.token = response.token;
+                
+                if (response.user.role === 'student') {
+                    await this.fetchDashboard();
+                }
+                
                 return response;
             } catch (error) {
                 this.error = error.response?.data?.message || error.message;
@@ -59,10 +68,32 @@ export const useAuthStore = defineStore('auth', {
             }
         },
 
+        async fetchDashboard() {
+            try {
+                const response = await studentService.getDashboard();
+                this.dashboard = response.data;
+            } catch (error) {
+                console.error('Error fetching dashboard:', error);
+            }
+        },
+
+        async updateProfile(profileData) {
+            try {
+                const response = await studentService.updateProfile(profileData);
+                this.user = response.data;
+                localStorage.setItem('user', JSON.stringify(response.data));
+                return response.data;
+            } catch (error) {
+                this.error = error.response?.data?.message || error.message;
+                throw error;
+            }
+        },
+
         logout() {
-            auth.logout();
+            authService.logout();
             this.user = null;
             this.token = null;
+            this.dashboard = null;
         }
     }
 }); 

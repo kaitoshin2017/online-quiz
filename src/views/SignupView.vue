@@ -76,7 +76,7 @@
               <input 
                 type="text" 
                 id="firstName" 
-                v-model="formData.profile.firstName" 
+                v-model="formData.firstName" 
                 placeholder="Enter your first name"
                 required
               >
@@ -90,7 +90,7 @@
               <input 
                 type="text" 
                 id="lastName" 
-                v-model="formData.profile.lastName" 
+                v-model="formData.lastName" 
                 placeholder="Enter your last name"
                 required
               >
@@ -135,6 +135,63 @@
                 Passwords do not match
               </span>
             </div>
+
+            <div class="form-group">
+              <label for="role">
+                <i class="fas fa-user-shield"></i>
+                Register As
+              </label>
+              <select 
+                id="role" 
+                v-model="formData.role" 
+                required
+                class="role-select"
+              >
+                <option value="student">Student</option>
+                <option value="teacher">Teacher</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+
+            <div class="form-group" v-if="formData.role === 'teacher'">
+              <label for="teacherCode">
+                <i class="fas fa-key"></i>
+                Teacher Code
+              </label>
+              <input 
+                type="text" 
+                id="teacherCode" 
+                v-model="formData.teacherCode" 
+                placeholder="Enter teacher code"
+                :required="formData.role === 'teacher'"
+              >
+            </div>
+
+            <div class="form-group" v-if="formData.role === 'admin'">
+              <label for="adminCode">
+                <i class="fas fa-key"></i>
+                Admin Code
+              </label>
+              <input 
+                type="text" 
+                id="adminCode" 
+                v-model="formData.adminCode" 
+                placeholder="Enter admin code"
+                :required="formData.role === 'admin'"
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="avatar">
+                <i class="fas fa-image"></i>
+                Avatar
+              </label>
+              <input 
+                type="file" 
+                id="avatar" 
+                @change="handleAvatarChange"
+              >
+            </div>
           </div>
 
           <div class="form-actions">
@@ -164,7 +221,7 @@
 <script>
 import Logo from '../components/Logo.vue'
 import Sidebar from '../components/Sidebar.vue'
-import { useAuthStore } from '../stores/auth'
+import { authService } from '../services/api'
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -175,7 +232,6 @@ export default {
     Sidebar
   },
   setup() {
-    const authStore = useAuthStore()
     const router = useRouter()
     const error = ref('')
     const loading = ref(false)
@@ -186,11 +242,12 @@ export default {
       email: '',
       password: '',
       confirmPassword: '',
+      firstName: '',
+      lastName: '',
       role: 'student',
-      profile: {
-        firstName: '',
-        lastName: ''
-      }
+      teacherCode: '',
+      adminCode: '',
+      avatar: null
     })
 
     const showPassword = ref(false)
@@ -200,15 +257,23 @@ export default {
     })
 
     const isFormValid = computed(() => {
-      return (
+      const baseValid = (
         formData.value.username &&
         formData.value.email &&
         formData.value.password &&
         formData.value.confirmPassword &&
-        formData.value.profile.firstName &&
-        formData.value.profile.lastName &&
+        formData.value.firstName &&
+        formData.value.lastName &&
         passwordsMatch.value
-      )
+      );
+
+      if (formData.value.role === 'teacher') {
+        return baseValid && formData.value.teacherCode;
+      } else if (formData.value.role === 'admin') {
+        return baseValid && formData.value.adminCode;
+      }
+
+      return baseValid;
     })
 
     const togglePassword = () => {
@@ -222,18 +287,26 @@ export default {
         loading.value = true
         error.value = ''
 
-        await authStore.register({
-          username: formData.value.username,
-          email: formData.value.email,
-          password: formData.value.password,
-          role: formData.value.role,
-          profile: {
-            firstName: formData.value.profile.firstName,
-            lastName: formData.value.profile.lastName
-          }
-        })
+        const formDataToSend = new FormData()
+        formDataToSend.append('username', formData.value.username)
+        formDataToSend.append('email', formData.value.email)
+        formDataToSend.append('password', formData.value.password)
+        formDataToSend.append('confirmPassword', formData.value.confirmPassword)
+        formDataToSend.append('firstName', formData.value.firstName)
+        formDataToSend.append('lastName', formData.value.lastName)
+        formDataToSend.append('role', formData.value.role)
+        
+        if (formData.value.role === 'teacher') {
+          formDataToSend.append('teacherCode', formData.value.teacherCode)
+        } else if (formData.value.role === 'admin') {
+          formDataToSend.append('adminCode', formData.value.adminCode)
+        }
 
-        // Registration successful, redirect to login
+        if (formData.value.avatar) {
+          formDataToSend.append('avatar', formData.value.avatar)
+        }
+
+        await authService.signup(formDataToSend)
         router.push('/login')
       } catch (err) {
         error.value = err.response?.data?.message || 'Registration failed. Please try again.'
@@ -248,14 +321,22 @@ export default {
         email: '',
         password: '',
         confirmPassword: '',
+        firstName: '',
+        lastName: '',
         role: 'student',
-        profile: {
-          firstName: '',
-          lastName: ''
-        }
+        teacherCode: '',
+        adminCode: '',
+        avatar: null
       }
       showPassword.value = false
       error.value = ''
+    }
+
+    const handleAvatarChange = (event) => {
+      const file = event.target.files[0]
+      if (file) {
+        formData.value.avatar = file
+      }
     }
 
     return {
@@ -268,7 +349,8 @@ export default {
       isFormValid,
       togglePassword,
       handleSubmit,
-      handleCancel
+      handleCancel,
+      handleAvatarChange
     }
   }
 }
@@ -623,5 +705,37 @@ footer {
   .submit-btn {
     padding: 10px 20px;
   }
+}
+
+.role-select {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.9);
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1em;
+}
+
+.role-select:focus {
+  outline: none;
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+:global(.dark-mode) .role-select {
+  background-color: rgba(40, 40, 40, 0.9);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+:global(.dark-mode) .role-select:focus {
+  border-color: #7b61ff;
+  box-shadow: 0 0 0 3px rgba(123, 97, 255, 0.1);
 }
 </style>

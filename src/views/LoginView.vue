@@ -99,7 +99,7 @@
 
 <script>
 import Logo from '../components/Logo.vue'
-import { useAuthStore } from '../stores/auth'
+import { authService } from '../services/api'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -109,7 +109,6 @@ export default {
     Logo
   },
   setup() {
-    const authStore = useAuthStore()
     const router = useRouter()
     const error = ref('')
     const loading = ref(false)
@@ -131,16 +130,12 @@ export default {
         loading.value = true
         error.value = ''
         
-        await authStore.login({
-          email: formData.value.email,
-          password: formData.value.password
-        })
-
+        const response = await authService.login(formData.value.email, formData.value.password)
+        
         // Redirect based on user role
-        const role = authStore.userRole
-        if (role === 'teacher') {
+        if (formData.value.role === 'teacher') {
           router.push('/teacher-panel')
-        } else if (role === 'admin') {
+        } else if (formData.value.role === 'admin') {
           router.push('/admin-panel')
         } else {
           router.push('/student')

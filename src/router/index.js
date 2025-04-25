@@ -2,10 +2,11 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import LoginView from '../views/LoginView.vue'
 import AboutView from '../views/AboutView.vue'
-import RegistrationView from '../views/RegistrationView.vue'
+import RegistrationView from '../views/SignupView.vue'
 import TeacherPannel from '../views/TeacherPannel.vue'
 import StudentView from '../views/StudentView.vue'
 import AdminPanel from '../views/AdminPanel.vue'
+import SignupView from '../views/SignupView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -27,8 +28,8 @@ const router = createRouter({
     },
     {
       path: '/signup',
-      name: 'registration',
-      component: RegistrationView,
+      name: 'signup',
+      component: SignupView,
     },
     {
       path: '/teacher-panel',
