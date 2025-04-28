@@ -6,6 +6,8 @@ const path = require('path');
 const authRoutes = require('./routes/auth');
 const quizRoutes = require('./routes/quizRoutes');
 const studentRoutes = require('./routes/studentRoutes');
+const teacherRoutes = require('./routes/teacherRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 // Load environment variables
 dotenv.config();
@@ -22,6 +24,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/auth', authRoutes);
 app.use('/api/quizzes', quizRoutes);
 app.use('/api/student', studentRoutes);
+app.use('/api/teacher', teacherRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

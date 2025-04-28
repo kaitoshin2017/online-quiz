@@ -22,6 +22,14 @@ const auth = async (req, res, next) => {
       });
     }
 
+    // Check if user has the required role for admin routes
+    if (req.path.startsWith('/api/admin') && user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Admin privileges required.'
+      });
+    }
+
     req.user = user;
     req.token = token;
     next();

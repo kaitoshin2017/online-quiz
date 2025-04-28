@@ -34,7 +34,6 @@
       </nav>
     </div>
 
-    <!-- Add mobile menu button -->
     <button class="mobile-menu-btn" @click="toggleSidebar" aria-label="Toggle Menu">
       <i class="fas fa-bars"></i>
     </button>
@@ -434,157 +433,573 @@
         </div>
       </div>
     </div>
+
+    <!-- Quiz Modal -->
+    <div v-if="showQuizModal" class="modal-overlay">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Create New Quiz</h3>
+          <button @click="showQuizModal = false" class="close-btn">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Quiz Title</label>
+            <input type="text" v-model="newQuiz.title" placeholder="Enter quiz title">
+          </div>
+          
+          <div class="form-group">
+            <label>Description</label>
+            <textarea v-model="newQuiz.description" placeholder="Enter quiz description"></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label>Duration (minutes)</label>
+            <input type="number" v-model="newQuiz.duration" min="1">
+          </div>
+          
+          <div class="questions-section">
+            <h4>Questions</h4>
+            
+            <div class="current-question">
+              <div class="form-group">
+                <label>Question Text</label>
+                <input type="text" v-model="currentQuestion.text" placeholder="Enter question">
+              </div>
+              
+              <div class="form-group">
+                <label>Options</label>
+                <div v-for="(option, index) in currentQuestion.options" :key="index" class="option-input">
+                  <input type="radio" v-model="currentQuestion.correctAnswer" :value="index">
+                  <input type="text" v-model="currentQuestion.options[index]" :placeholder="'Option ' + (index + 1)">
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label>Points</label>
+                <input type="number" v-model="currentQuestion.points" min="1">
+              </div>
+              
+              <button @click="addQuestion" class="add-question-btn">
+                <i class="fas fa-plus"></i> Add Question
+              </button>
+            </div>
+            
+            <div class="added-questions">
+              <div v-for="(question, index) in newQuiz.questions" :key="index" class="question-item">
+                <div class="question-header">
+                  <span>{{ question.text }}</span>
+                  <button @click="removeQuestion(index)" class="remove-btn">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+                <div class="question-options">
+                  <div v-for="(option, optIndex) in question.options" :key="optIndex" 
+                       :class="['option', { 'correct': optIndex === question.correctAnswer }]">
+                    {{ option }}
+                  </div>
+                </div>
+                <div class="question-points">
+                  Points: {{ question.points }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <button @click="showQuizModal = false" class="cancel-btn">Cancel</button>
+          <button @click="saveQuiz" class="save-btn" :disabled="newQuiz.questions.length === 0">
+            Save Quiz
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Student Modal -->
+    <div v-if="showStudentModal" class="modal-overlay">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Add New Student</h3>
+          <button @click="showStudentModal = false" class="close-btn">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        
+        <div class="modal-body">
+          <div class="form-group">
+            <label>First Name</label>
+            <input type="text" v-model="newStudent.firstName" placeholder="Enter first name">
+          </div>
+          
+          <div class="form-group">
+            <label>Last Name</label>
+            <input type="text" v-model="newStudent.lastName" placeholder="Enter last name">
+          </div>
+          
+          <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" v-model="newStudent.email" placeholder="Enter email address">
+          </div>
+          
+          <div class="form-group">
+            <label>Phone Number</label>
+            <input type="tel" v-model="newStudent.phone" placeholder="Enter phone number">
+          </div>
+          
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" v-model="newStudent.password" placeholder="Enter password">
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <button @click="showStudentModal = false" class="cancel-btn">Cancel</button>
+          <button @click="addStudent" class="save-btn">Add Student</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 import Logo from '../components/Logo.vue'
+import teacherService from '@/services/teacherService';
+import { ref, onMounted, computed } from 'vue';
+import { useRouter } from 'vue-router';
 
 export default {
   name: 'TeacherPanel',
   components: {
     Logo
   },
-  data() {
-    return {
-      activeTab: 'dashboard',
-      searchQuery: '',
-      teacherName: 'IGNA',
-      teacherAvatar: 'https://via.placeholder.com/40',
-      totalQuizzes: 12,
-      activeStudents: 45,
-      averageScore: 85,
-      pendingReviews: 3,
-      recentActivities: [
-        {
-          id: 1,
-          type: 'quiz',
-          description: 'New quiz submission from Sarah',
-          time: '5 minutes ago'
-        },
-        {
-          id: 2,
-          type: 'student',
-          description: 'New student registration',
-          time: '1 hour ago'
-        },
-        {
-          id: 3,
-          type: 'result',
-          description: 'Quiz results updated',
-          time: '2 hours ago'
-        }
-      ],
-      quizzes: [
-        {
-          id: 1,
-          title: 'Mathematics Basics',
-          description: 'Basic arithmetic and algebra',
-          participants: 30,
-          duration: 45
-        },
-        {
-          id: 2,
-          title: 'Science Quiz',
-          description: 'Physics and Chemistry fundamentals',
-          participants: 25,
-          duration: 60
-        }
-      ],
-      students: [
-        {
-          id: 1,
-          name: 'Sarah Johnson',
-          email: 'sarah@example.com',
-          quizzesTaken: 5,
-          averageScore: 92,
-          status: 'active'
-        },
-        {
-          id: 2,
-          name: 'Mike Wilson',
-          email: 'mike@example.com',
-          quizzesTaken: 3,
-          averageScore: 78,
-          status: 'inactive'
-        }
-      ],
-      selectedQuiz: '',
-      timeRange: 'all',
-      quizResults: [
-        {
-          id: 1,
-          studentName: 'Sarah Johnson',
-          score: 95,
-          timeTaken: 35,
-          date: '2024-03-15',
-          status: 'completed'
-        }
-      ],
-      teacherEmail: 'teacher@example.com',
-      teacherPhone: '+1 234 567 890',
+  setup() {
+    const router = useRouter();
+    const activeTab = ref('dashboard');
+    const searchQuery = ref('');
+    const teacherName = ref('');
+    const teacherEmail = ref('');
+    const teacherPhone = ref('');
+    const teacherAvatar = ref('/default-avatar.png');
+    const isSidebarOpen = ref(false);
+    const showQuizModal = ref(false);
+    const showStudentModal = ref(false);
+    const currentPath = computed(() => router.currentRoute.value.path);
+    const isLoading = ref(false);
+    const error = ref('');
+    const profileForm = ref({
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+      bio: ''
+    });
+    const settings = ref({
       notifications: {
-        email: true,
-        quizResults: true,
+        email: false,
+        quizResults: false,
         studentActivity: false
       },
       quizPreferences: {
-        defaultDuration: 45,
+        defaultDuration: 30,
         questionsPerPage: '10',
         showTimer: true,
         randomizeQuestions: false
       },
       themePreferences: {
-        darkMode: false
-      },
-      currentTheme: 'default',
-      themes: [
+        darkMode: false,
+        theme: 'default'
+      }
+    });
+
+    // Add missing properties with default values
+    const totalQuizzes = ref(0);
+    const activeStudents = ref(0);
+    const averageScore = ref(0);
+    const pendingReviews = ref(0);
+    const recentActivities = ref([]);
+
+    // Quiz data
+    const quizzes = ref([]);
+    const newQuiz = ref({
+      title: '',
+      description: '',
+      duration: 30,
+      questions: [],
+      totalPoints: 0
+    });
+
+    const currentQuestion = ref({
+      text: '',
+      options: ['', '', '', ''],
+      correctAnswer: 0,
+      points: 1
+    });
+
+    // Student data
+    const students = ref([]);
+    const newStudent = ref({
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+      password: ''
+    });
+
+    // Results data
+    const quizResults = ref([]);
+    const selectedQuiz = ref('');
+    const timeRange = ref('all');
+
+    // Initialize component
+    onMounted(async () => {
+      try {
+        isLoading.value = true;
+        // Initialize token from localStorage
+        teacherService.initializeToken();
+        
+        // Fetch teacher profile
+        const profileResponse = await teacherService.getProfile();
+        if (profileResponse.success) {
+          const { firstName, lastName, email, phone, bio } = profileResponse.teacher;
+          teacherName.value = `${firstName} ${lastName}`;
+          teacherEmail.value = email;
+          teacherPhone.value = phone || '';
+          teacherAvatar.value = '/default-avatar.png';
+          profileForm.value = { firstName, lastName, email, phone: phone || '', bio: bio || '' };
+        }
+
+        // Fetch settings
+        const settingsResponse = await teacherService.getSettings();
+        if (settingsResponse.success) {
+          // Ensure settings object has all required properties
+          settings.value = {
+            notifications: {
+              email: settingsResponse.settings?.notifications?.email ?? false,
+              quizResults: settingsResponse.settings?.notifications?.quizResults ?? false,
+              studentActivity: settingsResponse.settings?.notifications?.studentActivity ?? false
+            },
+            quizPreferences: {
+              defaultDuration: settingsResponse.settings?.quizPreferences?.defaultDuration ?? 30,
+              questionsPerPage: settingsResponse.settings?.quizPreferences?.questionsPerPage ?? '10',
+              showTimer: settingsResponse.settings?.quizPreferences?.showTimer ?? true,
+              randomizeQuestions: settingsResponse.settings?.quizPreferences?.randomizeQuestions ?? false
+            },
+            themePreferences: {
+              darkMode: settingsResponse.settings?.themePreferences?.darkMode ?? false,
+              theme: settingsResponse.settings?.themePreferences?.theme ?? 'default'
+            }
+          };
+          
+          // Apply theme
+          if (settings.value.themePreferences.darkMode) {
+            document.documentElement.classList.add('dark');
+          }
+        }
+
+        // Fetch quizzes
+        const quizzesResponse = await teacherService.getQuizzes();
+        if (quizzesResponse.success) {
+          quizzes.value = quizzesResponse.quizzes;
+          totalQuizzes.value = quizzesResponse.quizzes.length;
+        }
+
+        // Fetch students
+        const studentsResponse = await teacherService.getStudents();
+        if (studentsResponse.success) {
+          students.value = studentsResponse.students;
+          activeStudents.value = studentsResponse.students.length;
+        }
+
+        // Fetch results
+        const resultsResponse = await teacherService.getResults(selectedQuiz.value, timeRange.value);
+        if (resultsResponse.success) {
+          quizResults.value = resultsResponse.results;
+        }
+      } catch (err) {
+        error.value = err.message;
+        console.error('Error initializing teacher panel:', err);
+      } finally {
+        isLoading.value = false;
+      }
+    });
+
+    // Save profile changes
+    const saveProfile = async () => {
+      try {
+        isLoading.value = true;
+        error.value = '';
+        const response = await teacherService.updateProfile(profileForm.value);
+        if (response.success) {
+          teacherName.value = `${profileForm.value.firstName} ${profileForm.value.lastName}`;
+          teacherEmail.value = profileForm.value.email;
+          teacherPhone.value = profileForm.value.phone;
+          teacherAvatar.value = '/default-avatar.png';
+        }
+      } catch (err) {
+        error.value = err.message;
+      } finally {
+        isLoading.value = false;
+      }
+    };
+
+    // Save settings
+    const saveSettings = async () => {
+      try {
+        isLoading.value = true;
+        error.value = '';
+        const response = await teacherService.updateSettings(settings.value);
+        if (response.success) {
+          // Apply theme changes immediately
+          if (settings.value.themePreferences.darkMode) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        }
+      } catch (err) {
+        error.value = err.message;
+      } finally {
+        isLoading.value = false;
+      }
+    };
+
+    // Handle logout
+    const logout = () => {
+      teacherService.setAuthToken(null);
+      // Redirect to login page or emit logout event
+    };
+
+    // Quiz methods
+    const createNewQuiz = () => {
+      showQuizModal.value = true;
+      newQuiz.value = {
+        title: '',
+        description: '',
+        duration: 30,
+        questions: [],
+        totalPoints: 0
+      };
+      currentQuestion.value = {
+        text: '',
+        options: ['', '', '', ''],
+        correctAnswer: 0,
+        points: 1
+      };
+    };
+
+    const fetchQuizzes = async () => {
+      try {
+        const response = await teacherService.getQuizzes();
+        if (response.success) {
+          quizzes.value = response.quizzes;
+        }
+      } catch (error) {
+        console.error('Error fetching quizzes:', error);
+      }
+    };
+
+    const addQuestion = () => {
+      if (currentQuestion.value.text && currentQuestion.value.options.every(opt => opt)) {
+        newQuiz.value.questions.push({...currentQuestion.value});
+        newQuiz.value.totalPoints += currentQuestion.value.points;
+        currentQuestion.value = {
+          text: '',
+          options: ['', '', '', ''],
+          correctAnswer: 0,
+          points: 1
+        };
+      }
+    };
+
+    const removeQuestion = (index) => {
+      newQuiz.value.totalPoints -= newQuiz.value.questions[index].points;
+      newQuiz.value.questions.splice(index, 1);
+    };
+
+    const saveQuiz = async () => {
+      try {
+        if (newQuiz.value.questions.length === 0) {
+          alert('Please add at least one question');
+          return;
+        }
+
+        const response = await teacherService.createQuiz(newQuiz.value);
+        if (response.success) {
+          showQuizModal.value = false;
+          newQuiz.value = {
+            title: '',
+            description: '',
+            duration: 30,
+            questions: [],
+            totalPoints: 0
+          };
+          await fetchQuizzes();
+        }
+      } catch (error) {
+        console.error('Error creating quiz:', error);
+        alert('Failed to create quiz');
+      }
+    };
+
+    const editQuiz = async (quiz) => {
+      try {
+        const response = await teacherService.updateQuiz(quiz._id, quiz);
+        if (response.success) {
+          await fetchQuizzes();
+        }
+      } catch (error) {
+        console.error('Error updating quiz:', error);
+      }
+    };
+
+    const deleteQuiz = async (quiz) => {
+      if (confirm('Are you sure you want to delete this quiz?')) {
+        try {
+          const response = await teacherService.deleteQuiz(quiz._id);
+          if (response.success) {
+            await fetchQuizzes();
+          }
+        } catch (error) {
+          console.error('Error deleting quiz:', error);
+        }
+      }
+    };
+
+    // Student methods
+    const fetchStudents = async () => {
+      try {
+        const response = await teacherService.getStudents();
+        if (response.success) {
+          students.value = response.students;
+        }
+      } catch (error) {
+        console.error('Error fetching students:', error);
+      }
+    };
+
+    const addStudent = async () => {
+      try {
+        const response = await teacherService.addStudent(newStudent.value);
+        if (response.success) {
+          showStudentModal.value = false;
+          newStudent.value = {
+            firstName: '',
+            lastName: '',
+            email: '',
+            phone: '',
+            password: ''
+          };
+          await fetchStudents();
+        }
+      } catch (error) {
+        console.error('Error adding student:', error);
+        alert('Failed to add student');
+      }
+    };
+
+    const updateStudent = async (student) => {
+      try {
+        const response = await teacherService.updateStudent(student._id, student);
+        if (response.success) {
+          await fetchStudents();
+        }
+      } catch (error) {
+        console.error('Error updating student:', error);
+      }
+    };
+
+    const deleteStudent = async (student) => {
+      if (confirm('Are you sure you want to delete this student?')) {
+        try {
+          const response = await teacherService.deleteStudent(student._id);
+          if (response.success) {
+            await fetchStudents();
+          }
+        } catch (error) {
+          console.error('Error deleting student:', error);
+        }
+      }
+    };
+
+    // Results methods
+    const fetchResults = async () => {
+      try {
+        const response = await teacherService.getResults(selectedQuiz.value, timeRange.value);
+        if (response.success) {
+          quizResults.value = response.results;
+        }
+      } catch (error) {
+        console.error('Error fetching results:', error);
+      }
+    };
+
+    // Settings methods
+    const setTheme = (themeName) => {
+      settings.value.themePreferences.theme = themeName;
+      document.documentElement.style.setProperty('--primary-color', themes.value.find(t => t.name === themeName)?.color || '#4f46e5');
+    };
+
+    const themes = ref([
         { name: 'default', color: '#4f46e5' },
         { name: 'ocean', color: '#0ea5e9' },
         { name: 'forest', color: '#22c55e' },
         { name: 'sunset', color: '#f97316' },
         { name: 'berry', color: '#d946ef' }
-      ],
-      isSidebarOpen: false,
-    }
-  },
-  methods: {
-    getActivityIcon(type) {
-      const icons = {
-        quiz: 'fas fa-question-circle',
-        student: 'fas fa-user',
-        result: 'fas fa-chart-bar'
-      }
-      return icons[type] || 'fas fa-info-circle'
-    },
-    createNewQuiz() {
-      // Implement quiz creation logic
-    },
-    editQuiz(quiz) {
-      // Implement quiz editing logic
-    },
-    deleteQuiz(quiz) {
-      // Implement quiz deletion logic
-    },
-    viewStudentDetails(student) {
-      // Implement student details view logic
-    },
-    editStudent(student) {
-      // Implement student editing logic
-    },
-    saveSettings() {
-      // Implement settings save logic
-      console.log('Settings saved')
-    },
-    setTheme(themeName) {
-      this.currentTheme = themeName
-      // Implement theme change logic
-    },
-    toggleSidebar() {
-      this.isSidebarOpen = !this.isSidebarOpen;
-    }
+    ]);
+
+    return {
+      activeTab,
+      searchQuery,
+      teacherName,
+      teacherEmail,
+      teacherPhone,
+      teacherAvatar,
+      isSidebarOpen,
+      showQuizModal,
+      showStudentModal,
+      currentPath,
+      isLoading,
+      error,
+      profileForm,
+      settings,
+      totalQuizzes,
+      activeStudents,
+      averageScore,
+      pendingReviews,
+      recentActivities,
+      quizzes,
+      newQuiz,
+      currentQuestion,
+      students,
+      newStudent,
+      quizResults,
+      selectedQuiz,
+      timeRange,
+      notifications: settings.value.notifications,
+      quizPreferences: settings.value.quizPreferences,
+      themePreferences: settings.value.themePreferences,
+      currentTheme: settings.value.themePreferences.theme,
+      themes,
+      saveProfile,
+      saveSettings,
+      logout,
+      addQuestion,
+      removeQuestion,
+      saveQuiz,
+      editQuiz,
+      deleteQuiz,
+      addStudent,
+      updateStudent,
+      deleteStudent,
+      fetchResults,
+      setTheme,
+      toggleSidebar: () => isSidebarOpen.value = !isSidebarOpen.value
+    };
   }
-}
+};
 </script>
 
 <style scoped>
@@ -1794,5 +2209,179 @@ input:checked + .toggle-slider:before {
   .toggle-slider {
     background-color: #4b5563;
   }
+}
+
+/* Add these styles to your existing styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: #333;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #666;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  color: #333;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.questions-section {
+  margin-top: 30px;
+}
+
+.current-question {
+  background: #f9f9f9;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.option-input {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.option-input input[type="radio"] {
+  margin-right: 10px;
+}
+
+.add-question-btn {
+  background: #4CAF50;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.added-questions {
+  margin-top: 20px;
+}
+
+.question-item {
+  background: #f5f5f5;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.question-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.remove-btn {
+  background: none;
+  border: none;
+  color: #ff4444;
+  cursor: pointer;
+}
+
+.question-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.option {
+  padding: 8px;
+  background: #fff;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
+.option.correct {
+  background: #e8f5e9;
+  border-color: #4CAF50;
+}
+
+.modal-footer {
+  padding: 20px;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.cancel-btn {
+  padding: 10px 20px;
+  background: #f44336;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.save-btn {
+  padding: 10px 20px;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.save-btn:disabled {
+  background: #cccccc;
+  cursor: not-allowed;
 }
 </style>

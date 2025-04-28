@@ -103,32 +103,26 @@
 <script>
 export default {
   name: 'AdminDashboard',
-  data() {
-    return {
-      totalUsers: 150,
-      activeTeachers: 25,
-      activeStudents: 120,
-      totalQuizzes: 45,
-      recentActivities: [
-        {
-          id: 1,
-          type: 'user',
-          description: 'New user registration',
-          time: '5 minutes ago'
-        },
-        {
-          id: 2,
-          type: 'quiz',
-          description: 'New quiz created',
-          time: '1 hour ago'
-        },
-        {
-          id: 3,
-          type: 'report',
-          description: 'Monthly report generated',
-          time: '2 hours ago'
-        }
-      ]
+  props: {
+    totalUsers: {
+      type: Number,
+      required: true
+    },
+    activeTeachers: {
+      type: Number,
+      required: true
+    },
+    activeStudents: {
+      type: Number,
+      required: true
+    },
+    totalQuizzes: {
+      type: Number,
+      required: true
+    },
+    recentActivities: {
+      type: Array,
+      required: true
     }
   },
   methods: {
@@ -141,16 +135,16 @@ export default {
       return icons[type] || 'fas fa-info-circle'
     },
     addNewUser() {
-      // Implement user creation logic
+      this.$emit('add-user');
     },
     createNewQuiz() {
-      // Implement quiz creation logic
+      this.$emit('create-quiz');
     },
     generateReport() {
-      // Implement report generation logic
+      this.$emit('generate-report');
     },
     openSettings() {
-      // Implement settings opening logic
+      this.$emit('open-settings');
     }
   }
 }

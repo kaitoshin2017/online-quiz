@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const Teacher = require('../models/Teacher');
 const multer = require('multer');
 const path = require('path');
 const bcrypt = require('bcryptjs');
@@ -96,6 +97,21 @@ router.post('/signup', upload.single('avatar'), async (req, res) => {
 
     await user.save();
     console.log('User created successfully:', user.email);
+
+    // If the user is a teacher, create a teacher record
+    if (role === 'teacher') {
+      const teacher = new Teacher({
+        _id: user._id,
+        firstName,
+        lastName,
+        email: email.toLowerCase(),
+        password: password.trim(),
+        avatar: req.file ? `/uploads/${req.file.filename}` : null,
+        role: 'teacher'
+      });
+      await teacher.save();
+      console.log('Teacher record created successfully:', teacher.email);
+    }
 
     // Generate token
     const token = await user.generateAuthToken();

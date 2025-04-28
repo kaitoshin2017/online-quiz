@@ -63,30 +63,58 @@
             <img :src="adminAvatar" alt="Admin Avatar" class="avatar">
             <div class="status-indicator"></div>
           </div>
+          <button class="logout-btn" @click="logout">
+            <i class="fas fa-sign-out-alt"></i>
+          </button>
         </div>
       </div>
 
       <div class="content">
+        <div v-if="isLoading" class="loading-overlay">
+          <div class="spinner"></div>
+        </div>
+        <div v-else-if="error" class="error-message">
+          {{ error }}
+        </div>
+        <template v-else>
         <!-- Dashboard Tab -->
-        <AdminDashboard v-if="activeTab === 'dashboard'" />
+          <AdminDashboard v-if="activeTab === 'dashboard'" 
+            :totalUsers="totalUsers"
+            :activeTeachers="activeTeachers"
+            :activeStudents="activeStudents"
+            :totalQuizzes="totalQuizzes"
+            :recentActivities="recentActivities"
+          />
 
         <!-- Users Tab -->
-        <UserManagement v-if="activeTab === 'users'" />
+          <UserManagement v-if="activeTab === 'users'" 
+            :users="users"
+          />
 
         <!-- Teachers Tab -->
-        <TeacherManagement v-if="activeTab === 'teachers'" />
+          <TeacherManagement v-if="activeTab === 'teachers'" 
+            :teachers="teachers"
+          />
 
         <!-- Students Tab -->
-        <StudentManagement v-if="activeTab === 'students'" />
+          <StudentManagement v-if="activeTab === 'students'" 
+            :students="students"
+          />
 
         <!-- Quizzes Tab -->
-        <QuizManagement v-if="activeTab === 'quizzes'" />
+          <QuizManagement v-if="activeTab === 'quizzes'" 
+            :quizzes="quizzes"
+          />
 
         <!-- Reports Tab -->
         <ReportManagement v-if="activeTab === 'reports'" />
 
         <!-- Settings Tab -->
-        <SettingsManagement v-if="activeTab === 'settings'" />
+          <SettingsManagement v-if="activeTab === 'settings'" 
+            :settings="settings"
+            @update-settings="updateSettings"
+          />
+        </template>
       </div>
     </div>
   </div>
@@ -101,6 +129,8 @@ import QuizManagement from '../components/QuizManagement.vue'
 import ReportManagement from '../components/ReportManagement.vue'
 import SettingsManagement from '../components/SettingsManagement.vue'
 import UserManagement from '../components/UserManagement.vue'
+import adminService from '../services/adminService'
+import { ref, onMounted } from 'vue'
 
 export default {
   name: 'AdminPanel',
@@ -114,91 +144,26 @@ export default {
     SettingsManagement,
     UserManagement
   },
-  data() {
-    return {
-      activeTab: 'dashboard',
-      searchQuery: '',
-      adminName: 'Warren',
-      adminAvatar: 'https://via.placeholder.com/40',
-      totalUsers: 150,
-      activeTeachers: 25,
-      activeStudents: 120,
-      totalQuizzes: 45,
-      recentActivities: [
-        {
-          id: 1,
-          type: 'user',
-          description: 'New user registration',
-          time: '5 minutes ago'
-        },
-        {
-          id: 2,
-          type: 'quiz',
-          description: 'New quiz created',
-          time: '1 hour ago'
-        },
-        {
-          id: 3,
-          type: 'report',
-          description: 'Monthly report generated',
-          time: '2 hours ago'
-        }
-      ],
-      userFilter: 'all',
-      statusFilter: 'all',
-      users: [
-        {
-          id: 1,
-          name: 'John Doe',
-          email: 'john@example.com',
-          role: 'Teacher',
-          status: 'active',
-          lastLogin: '2024-03-15 10:30'
-        },
-        {
-          id: 2,
-          name: 'Jane Smith',
-          email: 'jane@example.com',
-          role: 'Student',
-          status: 'active',
-          lastLogin: '2024-03-15 09:15'
-        }
-      ],
-      teachers: [
-        {
-          id: 1,
-          name: 'John Doe',
-          email: 'john@example.com',
-          avatar: 'https://via.placeholder.com/50',
-          courses: 5,
-          students: 45,
-          rating: 4.8
-        }
-      ],
-      students: [
-        {
-          id: 1,
-          name: 'Jane Smith',
-          email: 'jane@example.com',
-          grade: 10,
-          quizzesTaken: 8,
-          averageScore: 85,
-          status: 'active'
-        }
-      ],
-      quizzes: [
-        {
-          id: 1,
-          title: 'Mathematics Basics',
-          subject: 'Mathematics',
-          duration: 45,
-          questions: 20,
-          participants: 30,
-          averageScore: 75,
-          status: 'active'
-        }
-      ],
-      settings: {
+  setup() {
+    const activeTab = ref('dashboard');
+    const searchQuery = ref('');
+    const adminName = ref('');
+    const adminAvatar = ref('/default-avatar.png');
+    const isLoading = ref(false);
+    const error = ref('');
+    const currentPath = ref(window.location.pathname);
+
+    // Initialize data
+    const totalUsers = ref(0);
+    const activeTeachers = ref(0);
+    const activeStudents = ref(0);
+    const totalQuizzes = ref(0);
+    const recentActivities = ref([]);
+    const users = ref([]);
+    const teachers = ref([]);
+    const students = ref([]);
+    const quizzes = ref([]);
+    const settings = ref({
         systemName: 'Online Quiz System',
         systemEmail: 'admin@example.com',
         timezone: 'UTC',
@@ -208,110 +173,140 @@ export default {
         emailNotifications: true,
         systemNotifications: true,
         notificationFrequency: 'realtime'
-      },
-      timezones: ['UTC', 'EST', 'PST', 'GMT'],
-      grades: [9, 10, 11, 12],
-      subjects: ['Mathematics', 'Science', 'English', 'History'],
-      userGrowthPeriod: 'month',
-      quizPerformancePeriod: 'month',
-      systemUsagePeriod: 'month'
-    }
-  },
-  computed: {
-    filteredUsers() {
-      return this.users.filter(user => {
-        if (this.userFilter !== 'all' && user.role.toLowerCase() !== this.userFilter) {
-          return false;
+    });
+
+    // Initialize component
+    onMounted(async () => {
+      try {
+        isLoading.value = true;
+        error.value = '';
+        
+        // Initialize token from localStorage
+        const hasToken = adminService.initializeToken();
+        
+        if (!hasToken) {
+          // Redirect to login if no token is found
+          window.location.href = '/login';
+          return;
         }
-        if (this.statusFilter !== 'all' && user.status !== this.statusFilter) {
-          return false;
+        
+        // Fetch admin profile
+        const profileResponse = await adminService.getProfile();
+        if (!profileResponse.success) {
+          throw new Error(profileResponse.message || 'Failed to fetch profile');
         }
-        return true;
-      });
-    },
-    filteredStudents() {
-      return this.students.filter(student => {
-        if (this.studentFilter !== 'all' && student.status !== this.studentFilter) {
-          return false;
+        
+        const { firstName, lastName, email, avatar } = profileResponse.admin;
+        adminName.value = `${firstName} ${lastName}`;
+        adminAvatar.value = avatar || '/default-avatar.png';
+
+        // Fetch dashboard data
+        const dashboardResponse = await adminService.getDashboard();
+        if (!dashboardResponse.success) {
+          throw new Error(dashboardResponse.message || 'Failed to fetch dashboard data');
         }
-        if (this.gradeFilter !== 'all' && student.grade !== parseInt(this.gradeFilter)) {
-          return false;
+        
+        const { statistics, recentActivities: activities } = dashboardResponse.data;
+        totalUsers.value = statistics.totalUsers;
+        activeTeachers.value = statistics.activeTeachers;
+        activeStudents.value = statistics.activeStudents;
+        totalQuizzes.value = statistics.totalQuizzes;
+        recentActivities.value = activities;
+
+        // Fetch users
+        const usersResponse = await adminService.getUsers();
+        if (!usersResponse.success) {
+          throw new Error(usersResponse.message || 'Failed to fetch users');
         }
-        return true;
-      });
-    },
-    filteredQuizzes() {
-      return this.quizzes.filter(quiz => {
-        if (this.quizFilter !== 'all' && quiz.status !== this.quizFilter) {
-          return false;
+        users.value = usersResponse.users;
+
+        // Fetch teachers
+        const teachersResponse = await adminService.getTeachers();
+        if (!teachersResponse.success) {
+          throw new Error(teachersResponse.message || 'Failed to fetch teachers');
         }
-        if (this.subjectFilter !== 'all' && quiz.subject !== this.subjectFilter) {
-          return false;
+        teachers.value = teachersResponse.teachers;
+
+        // Fetch students
+        const studentsResponse = await adminService.getStudents();
+        if (!studentsResponse.success) {
+          throw new Error(studentsResponse.message || 'Failed to fetch students');
         }
-        return true;
-      });
-    }
-  },
-  methods: {
-    getActivityIcon(type) {
-      const icons = {
-        user: 'fas fa-user',
-        quiz: 'fas fa-question-circle',
-        report: 'fas fa-chart-bar'
+        students.value = studentsResponse.students;
+
+        // Fetch quizzes
+        const quizzesResponse = await adminService.getQuizzes();
+        if (!quizzesResponse.success) {
+          throw new Error(quizzesResponse.message || 'Failed to fetch quizzes');
+        }
+        quizzes.value = quizzesResponse.quizzes;
+
+        // Fetch settings
+        const settingsResponse = await adminService.getSettings();
+        if (!settingsResponse.success) {
+          throw new Error(settingsResponse.message || 'Failed to fetch settings');
+        }
+        settings.value = settingsResponse.settings;
+      } catch (err) {
+        error.value = err.message || 'An error occurred while initializing the admin panel';
+        console.error('Error initializing admin panel:', err);
+        
+        // If the error is due to authentication, redirect to login
+        if (err.status === 401) {
+          window.location.href = '/login';
+        }
+      } finally {
+        isLoading.value = false;
       }
-      return icons[type] || 'fas fa-info-circle'
-    },
-    addNewUser() {
-      // Implement user creation logic
-    },
-    editUser(user) {
-      // Implement user editing logic
-    },
-    deleteUser(user) {
-      // Implement user deletion logic
-    },
-    addNewTeacher() {
-      // Implement teacher creation logic
-    },
-    editTeacher(teacher) {
-      // Implement teacher editing logic
-    },
-    deleteTeacher(teacher) {
-      // Implement teacher deletion logic
-    },
-    addNewStudent() {
-      // Implement student creation logic
-    },
-    editStudent(student) {
-      // Implement student editing logic
-    },
-    deleteStudent(student) {
-      // Implement student deletion logic
-    },
-    createNewQuiz() {
-      // Implement quiz creation logic
-    },
-    editQuiz(quiz) {
-      // Implement quiz editing logic
-    },
-    previewQuiz(quiz) {
-      // Implement quiz preview logic
-    },
-    deleteQuiz(quiz) {
-      // Implement quiz deletion logic
-    },
-    generateReport() {
-      // Implement report generation logic
-    },
-    exportData() {
-      // Implement data export logic
-    },
-    saveSettings() {
-      // Implement settings save logic
-    },
-    resetSettings() {
-      // Implement settings reset logic
-    }
+    });
+
+    // Update settings
+    const updateSettings = async (newSettings) => {
+      try {
+        isLoading.value = true;
+        error.value = '';
+        
+        const response = await adminService.updateSettings(newSettings);
+        if (!response.success) {
+          throw new Error(response.message || 'Failed to update settings');
+        }
+        
+        settings.value = newSettings;
+      } catch (err) {
+        error.value = err.message || 'An error occurred while updating settings';
+        console.error('Error updating settings:', err);
+      } finally {
+        isLoading.value = false;
+      }
+    };
+
+    // Handle logout
+    const logout = () => {
+      adminService.setAuthToken(null);
+      window.location.href = '/login';
+    };
+
+    return {
+      activeTab,
+      searchQuery,
+      adminName,
+      adminAvatar,
+      isLoading,
+      error,
+      currentPath,
+      totalUsers,
+      activeTeachers,
+      activeStudents,
+      totalQuizzes,
+      recentActivities,
+      users,
+      teachers,
+      students,
+      quizzes,
+      settings,
+      updateSettings,
+      logout
+    };
   }
 }
 </script>
@@ -608,5 +603,56 @@ nav li:hover i, nav li.active i {
     width: 100%;
     justify-content: center;
   }
+}
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #4f46e5;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.error-message {
+  padding: 20px;
+  background: #fee2e2;
+  color: #dc2626;
+  border-radius: 8px;
+  margin: 20px;
+  text-align: center;
+}
+
+.logout-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.logout-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style> 
