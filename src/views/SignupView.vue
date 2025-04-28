@@ -257,23 +257,24 @@ export default {
     })
 
     const isFormValid = computed(() => {
-      const baseValid = (
-        formData.value.username &&
+      // Check basic required fields
+      const hasRequiredFields = (
+        formData.value.firstName &&
+        formData.value.lastName &&
         formData.value.email &&
         formData.value.password &&
         formData.value.confirmPassword &&
-        formData.value.firstName &&
-        formData.value.lastName &&
         passwordsMatch.value
       );
 
+      // Check role-specific requirements
       if (formData.value.role === 'teacher') {
-        return baseValid && formData.value.teacherCode;
+        return hasRequiredFields && formData.value.teacherCode;
       } else if (formData.value.role === 'admin') {
-        return baseValid && formData.value.adminCode;
+        return hasRequiredFields && formData.value.adminCode;
       }
 
-      return baseValid;
+      return hasRequiredFields;
     })
 
     const togglePassword = () => {
@@ -281,39 +282,49 @@ export default {
     }
 
     const handleSubmit = async () => {
-      if (!isFormValid.value) return
+      if (!isFormValid.value) {
+        error.value = 'Please fill in all required fields';
+        return;
+      }
 
       try {
-        loading.value = true
-        error.value = ''
+        loading.value = true;
+        error.value = '';
 
-        const formDataToSend = new FormData()
-        formDataToSend.append('username', formData.value.username)
-        formDataToSend.append('email', formData.value.email)
-        formDataToSend.append('password', formData.value.password)
-        formDataToSend.append('confirmPassword', formData.value.confirmPassword)
-        formDataToSend.append('firstName', formData.value.firstName)
-        formDataToSend.append('lastName', formData.value.lastName)
-        formDataToSend.append('role', formData.value.role)
+        // Create data object
+        const data = {
+          firstName: formData.value.firstName.trim(),
+          lastName: formData.value.lastName.trim(),
+          email: formData.value.email.trim(),
+          password: formData.value.password,
+          confirmPassword: formData.value.confirmPassword,
+          role: formData.value.role
+        };
+
+        // Add optional fields if they exist
+        if (formData.value.username) {
+          data.username = formData.value.username.trim();
+        }
         
+        // Add role-specific codes
         if (formData.value.role === 'teacher') {
-          formDataToSend.append('teacherCode', formData.value.teacherCode)
+          data.teacherCode = formData.value.teacherCode;
         } else if (formData.value.role === 'admin') {
-          formDataToSend.append('adminCode', formData.value.adminCode)
+          data.adminCode = formData.value.adminCode;
         }
 
-        if (formData.value.avatar) {
-          formDataToSend.append('avatar', formData.value.avatar)
-        }
-
-        await authService.signup(formDataToSend)
-        router.push('/login')
+        // Send the request
+        const response = await authService.signup(data);
+        
+        // Redirect to login on success
+        router.push('/login');
       } catch (err) {
-        error.value = err.response?.data?.message || 'Registration failed. Please try again.'
+        console.error('Registration error:', err);
+        error.value = err.response?.data?.message || 'Registration failed. Please try again.';
       } finally {
-        loading.value = false
+        loading.value = false;
       }
-    }
+    };
 
     const handleCancel = () => {
       formData.value = {

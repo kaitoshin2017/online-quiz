@@ -26,6 +26,7 @@ const ADMIN_CODE = 'ADMIN123';
 router.post('/signup', upload.single('avatar'), async (req, res) => {
   try {
     const { firstName, lastName, email, password, confirmPassword, role, teacherCode, adminCode } = req.body;
+    console.log('Signup attempt:', { email, role });
 
     // Basic validation
     if (!firstName || !lastName || !email || !password || !confirmPassword) {
@@ -83,27 +84,21 @@ router.post('/signup', upload.single('avatar'), async (req, res) => {
       });
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
     // Create new user
     const user = new User({
       firstName,
       lastName,
       email: email.toLowerCase(),
-      password: hashedPassword,
+      password: password.trim(),
       role: role || 'student',
       avatar: req.file ? `/uploads/${req.file.filename}` : null
     });
 
     await user.save();
+    console.log('User created successfully:', user.email);
 
     // Generate token
-    const token = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '24h' }
-    );
+    const token = await user.generateAuthToken();
 
     res.status(201).json({
       success: true,
@@ -131,9 +126,9 @@ router.post('/signup', upload.single('avatar'), async (req, res) => {
 // Login route
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, role } = req.body;
+    console.log('Login attempt:', { email, role });
 
-    // Basic validation
     if (!email || !password) {
       return res.status(400).json({ 
         success: false,
@@ -141,30 +136,19 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Find user
-    const user = await User.findOne({ email: email.toLowerCase() });
-    if (!user) {
+    // Find user and validate credentials
+    const user = await User.findByCredentials(email, password);
+    
+    // Check role if specified
+    if (role && user.role !== role) {
       return res.status(401).json({ 
         success: false,
-        message: 'Invalid email or password' 
-      });
-    }
-
-    // Check password
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(401).json({ 
-        success: false,
-        message: 'Invalid email or password' 
+        message: `This account is registered as a ${user.role}, not a ${role}` 
       });
     }
 
     // Generate token
-    const token = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '24h' }
-    );
+    const token = await user.generateAuthToken();
 
     res.json({
       success: true,
@@ -181,10 +165,9 @@ router.post('/login', async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ 
+    res.status(401).json({ 
       success: false,
-      message: 'Login failed',
-      error: error.message 
+      message: error.message || 'Login failed'
     });
   }
 });

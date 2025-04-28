@@ -130,7 +130,19 @@ export default {
         loading.value = true
         error.value = ''
         
-        const response = await authService.login(formData.value.email, formData.value.password)
+        // Trim the password and log the values being sent
+        const trimmedPassword = formData.value.password.trim();
+        console.log('Login attempt with:', {
+          email: formData.value.email,
+          passwordLength: trimmedPassword.length,
+          role: formData.value.role
+        });
+        
+        const response = await authService.login(
+          formData.value.email, 
+          trimmedPassword,
+          formData.value.role
+        )
         
         // Redirect based on user role
         if (formData.value.role === 'teacher') {
@@ -141,7 +153,8 @@ export default {
           router.push('/student')
         }
       } catch (err) {
-        error.value = err.response?.data?.message || 'Login failed. Please try again.'
+        console.error('Login error:', err);
+        error.value = err.message || 'Login failed. Please try again.'
       } finally {
         loading.value = false
       }

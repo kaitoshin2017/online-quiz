@@ -1,99 +1,118 @@
 import { defineStore } from 'pinia';
 import { authService, studentService } from '../services/api';
+import { ref, computed } from 'vue';
 
-export const useAuthStore = defineStore('auth', {
-    state: () => ({
-        user: null,
-        token: null,
-        loading: false,
-        error: null,
-        dashboard: null
-    }),
+export const useAuthStore = defineStore('auth', () => {
+    const user = ref(null);
+    const token = ref(null);
+    const loading = ref(false);
+    const error = ref(null);
+    const dashboard = ref(null);
 
-    getters: {
-        isAuthenticated: (state) => !!state.token,
-        userRole: (state) => state.user?.role,
-        isAdmin: (state) => state.user?.role === 'admin',
-        isTeacher: (state) => state.user?.role === 'teacher',
-        isStudent: (state) => state.user?.role === 'student'
-    },
+    const isAuthenticated = computed(() => !!token.value);
+    const userRole = computed(() => user.value?.role);
+    const isAdmin = computed(() => user.value?.role === 'admin');
+    const isTeacher = computed(() => user.value?.role === 'teacher');
+    const isStudent = computed(() => user.value?.role === 'student');
 
-    actions: {
-        async initialize() {
-            const user = authService.getCurrentUser();
-            const token = localStorage.getItem('token');
-            if (token && user) {
-                this.token = token;
-                this.user = user;
-                if (user.role === 'student') {
-                    await this.fetchDashboard();
+    async function initialize() {
+        try {
+            const storedUser = authService.getCurrentUser();
+            if (storedUser) {
+                user.value = storedUser;
+                token.value = localStorage.getItem('token');
+                if (user.value.role === 'student') {
+                    await fetchDashboard();
                 }
             }
-        },
-
-        async register(userData) {
-            this.loading = true;
-            this.error = null;
-            try {
-                const response = await authService.signup(userData);
-                this.user = response.user;
-                this.token = response.token;
-                return response;
-            } catch (error) {
-                this.error = error.response?.data?.message || error.message;
-                throw error;
-            } finally {
-                this.loading = false;
-            }
-        },
-
-        async login(credentials) {
-            this.loading = true;
-            this.error = null;
-            try {
-                const response = await authService.login(credentials.email, credentials.password);
-                this.user = response.user;
-                this.token = response.token;
-                
-                if (response.user.role === 'student') {
-                    await this.fetchDashboard();
-                }
-                
-                return response;
-            } catch (error) {
-                this.error = error.response?.data?.message || error.message;
-                throw error;
-            } finally {
-                this.loading = false;
-            }
-        },
-
-        async fetchDashboard() {
-            try {
-                const response = await studentService.getDashboard();
-                this.dashboard = response.data;
-            } catch (error) {
-                console.error('Error fetching dashboard:', error);
-            }
-        },
-
-        async updateProfile(profileData) {
-            try {
-                const response = await studentService.updateProfile(profileData);
-                this.user = response.data;
-                localStorage.setItem('user', JSON.stringify(response.data));
-                return response.data;
-            } catch (error) {
-                this.error = error.response?.data?.message || error.message;
-                throw error;
-            }
-        },
-
-        logout() {
+        } catch (err) {
+            console.error('Failed to initialize auth store:', err);
             authService.logout();
-            this.user = null;
-            this.token = null;
-            this.dashboard = null;
         }
     }
+
+    async function register(userData) {
+        try {
+            loading.value = true;
+            error.value = null;
+            const response = await authService.signup(userData);
+            user.value = response.user;
+            token.value = response.token;
+            return response;
+        } catch (err) {
+            error.value = err.response?.data?.message || err.message || 'Signup failed';
+            throw err;
+        } finally {
+            loading.value = false;
+        }
+    }
+
+    async function login(email, password) {
+        try {
+            loading.value = true;
+            error.value = null;
+            const response = await authService.login(email, password);
+            user.value = response.user;
+            token.value = response.token;
+            
+            if (response.user.role === 'student') {
+                await fetchDashboard();
+            }
+            
+            return response;
+        } catch (err) {
+            error.value = err.response?.data?.message || err.message || 'Login failed';
+            throw err;
+        } finally {
+            loading.value = false;
+        }
+    }
+
+    async function fetchDashboard() {
+        try {
+            const response = await studentService.getDashboard();
+            dashboard.value = response.data;
+        } catch (err) {
+            console.error('Error fetching dashboard:', err);
+        }
+    }
+
+    async function updateProfile(profileData) {
+        try {
+            const response = await studentService.updateProfile(profileData);
+            user.value = response.data;
+            localStorage.setItem('user', JSON.stringify(response.data));
+            return response.data;
+        } catch (err) {
+            error.value = err.response?.data?.message || err.message || 'Profile update failed';
+            throw err;
+        }
+    }
+
+    function logout() {
+        authService.logout();
+        user.value = null;
+        token.value = null;
+        dashboard.value = null;
+        error.value = null;
+    }
+
+    return {
+        user,
+        token,
+        loading,
+        error,
+        dashboard,
+        isAuthenticated,
+        userRole,
+        isAdmin,
+        isTeacher,
+        isStudent,
+        initialize,
+        register,
+        login,
+        fetchDashboard,
+        updateProfile,
+        logout
+    };
 }); 

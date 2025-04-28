@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const API_URL = 'http://localhost:3000/api';
 
 const api = axios.create({
     baseURL: API_URL,
@@ -62,43 +62,87 @@ api.interceptors.response.use(
 );
 
 export const authService = {
-    register: async (userData) => {
-        const response = await api.post('/auth/signup', userData);
-        if (response.data.token) {
-            localStorage.setItem('token', response.data.token);
+    async login(email, password, role = 'student') {
+        try {
+            // Ensure password is trimmed and not empty
+            const trimmedPassword = password.trim();
+            if (!trimmedPassword) {
+                throw new Error('Password cannot be empty');
+            }
+
+            const response = await api.post('/auth/login', { 
+                email: email.trim().toLowerCase(), 
+                password: trimmedPassword,
+                role 
+            });
+
+            if (response.data.token) {
+                localStorage.setItem('token', response.data.token);
+                localStorage.setItem('user', JSON.stringify(response.data.user));
+            }
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || { message: 'Login failed' };
         }
-        return response.data;
     },
 
-    login: async (credentials) => {
-        const response = await api.post('/auth/login', credentials);
-        if (response.data.token) {
-            localStorage.setItem('token', response.data.token);
+    async signup(userData) {
+        try {
+            const formData = new FormData();
+            
+            // Add all user data to FormData
+            Object.keys(userData).forEach(key => {
+                if (userData[key] !== null && userData[key] !== undefined) {
+                    formData.append(key, userData[key]);
+                }
+            });
+
+            const response = await api.post('/auth/signup', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+
+            if (response.data.token) {
+                localStorage.setItem('token', response.data.token);
+                localStorage.setItem('user', JSON.stringify(response.data.user));
+            }
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || { message: 'Signup failed' };
         }
-        return response.data;
     },
 
-    logout: () => {
+    logout() {
         localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user');
     },
 
-    getCurrentUser: async () => {
-        const response = await api.get('/auth/me');
-        return response.data;
+    getCurrentUser() {
+        const user = localStorage.getItem('user');
+        return user ? JSON.parse(user) : null;
     },
+
+    isAuthenticated() {
+        return !!localStorage.getItem('token');
+    }
 };
 
 export const studentService = {
     getProfile: async () => {
-        const response = await api.get('/students/profile');
+        const response = await api.get('/student/profile');
         return response.data;
     },
 
     updateProfile: async (profileData) => {
-        const response = await api.put('/students/profile', profileData);
+        const response = await api.put('/student/profile', profileData);
         return response.data;
     },
+
+    getDashboard: async () => {
+        const response = await api.get('/student/dashboard');
+        return response.data;
+    }
 };
 
 export const quizzes = {

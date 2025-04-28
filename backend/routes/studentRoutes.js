@@ -98,57 +98,42 @@ router.put('/profile', auth, validateProfileUpdate, async (req, res) => {
 router.get('/dashboard', auth, async (req, res) => {
   try {
     // Get available quizzes
-    const availableQuizzes = await Quiz.find({ 
-      status: 'Available',
-      startDate: { $lte: new Date() },
-      endDate: { $gte: new Date() }
-    })
-    .select('title description duration points createdAt startDate endDate')
-    .sort({ createdAt: -1 });
+    const availableQuizzes = await Quiz.find({
+      isPublished: true,
+      _id: { $nin: req.user.completedQuizzes }
+    }).select('title description duration totalQuestions');
 
     // Get completed quizzes with results
-    const completedQuizzes = await QuizResult.find({ student: req.user._id })
+    const completedQuizzes = await QuizResult.find({ user: req.user._id })
       .populate('quiz', 'title description')
-      .sort({ completedAt: -1 });
-
-    // Calculate statistics
-    const totalQuizzes = completedQuizzes.length;
-    const averageScore = totalQuizzes > 0 
-      ? completedQuizzes.reduce((sum, quiz) => sum + quiz.percentage, 0) / totalQuizzes 
-      : 0;
-
-    // Get recent activity
-    const recentActivity = await QuizResult.find({ student: req.user._id })
-      .populate('quiz', 'title')
       .sort({ completedAt: -1 })
       .limit(5);
+
+    // Calculate statistics
+    const totalQuizzes = await Quiz.countDocuments({ isPublished: true });
+    const completedCount = req.user.completedQuizzes.length;
+    const averageScore = completedQuizzes.length > 0 
+      ? completedQuizzes.reduce((acc, curr) => acc + curr.score, 0) / completedQuizzes.length 
+      : 0;
 
     res.json({
       success: true,
       data: {
-        profile: {
-          firstName: req.user.firstName,
-          lastName: req.user.lastName,
-          avatar: req.user.avatar,
-          email: req.user.email,
-          totalPoints: req.user.totalPoints || 0
-        },
         availableQuizzes,
         completedQuizzes,
         statistics: {
           totalQuizzes,
-          averageScore: Math.round(averageScore),
-          totalPoints: req.user.totalPoints || 0,
-          rank: await calculateRank(req.user._id)
-        },
-        recentActivity
+          completedCount,
+          averageScore,
+          progress: totalQuizzes > 0 ? (completedCount / totalQuizzes) * 100 : 0
+        }
       }
     });
   } catch (error) {
-    console.error('Error fetching dashboard data:', error);
+    console.error('Error fetching dashboard:', error);
     res.status(500).json({ 
       success: false,
-      message: 'Error fetching dashboard data',
+      message: 'Error fetching dashboard',
       error: error.message 
     });
   }
