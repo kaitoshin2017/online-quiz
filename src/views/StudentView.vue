@@ -328,6 +328,15 @@ export default {
     const loading = ref(false);
     const error = ref(null);
     const editMode = ref(false);
+    const currentPath = ref(router.currentRoute.value.path);
+    const availableQuizzes = ref([]);
+    const activeQuiz = ref(null);
+    const quizResult = ref(null);
+    const quizResults = ref([]);
+    const remainingTime = ref(0);
+    const currentQuestion = ref(0);
+    const selectedAnswer = ref(null);
+
     const profileForm = ref({
       firstName: '',
       lastName: '',
@@ -382,24 +391,50 @@ export default {
       error.value = null;
       try {
         const response = await studentService.getDashboardData();
-        if (response.success) {
+        if (response?.success && response?.data) {
           studentData.value = response.data;
           // Initialize profile form with current data
           profileForm.value = {
-            firstName: studentData.value.profile.firstName,
-            lastName: studentData.value.profile.lastName,
-            email: studentData.value.profile.email,
-            phone: studentData.value.profile.phone || '',
-            address: studentData.value.profile.address || '',
-            bio: studentData.value.profile.bio || '',
-            avatar: studentData.value.profile.avatar || ''
+            firstName: studentData.value.profile?.firstName || '',
+            lastName: studentData.value.profile?.lastName || '',
+            email: studentData.value.profile?.email || '',
+            phone: studentData.value.profile?.phone || '',
+            address: studentData.value.profile?.address || '',
+            bio: studentData.value.profile?.bio || '',
+            avatar: studentData.value.profile?.avatar || ''
           };
+        } else {
+          throw new Error('Invalid response format from server');
         }
       } catch (err) {
-        error.value = err.message;
+        error.value = err.message || 'Failed to fetch student data';
         console.error('Error fetching student data:', err);
       } finally {
         loading.value = false;
+      }
+    };
+
+    const fetchQuizzes = async () => {
+      try {
+        const response = await studentService.getAvailableQuizzes();
+        if (response?.success) {
+          availableQuizzes.value = response.data || [];
+        }
+      } catch (err) {
+        console.error('Error fetching quizzes:', err);
+        availableQuizzes.value = [];
+      }
+    };
+
+    const fetchResults = async () => {
+      try {
+        const response = await studentService.getQuizResults();
+        if (response?.success) {
+          quizResults.value = response.data || [];
+        }
+      } catch (err) {
+        console.error('Error fetching results:', err);
+        quizResults.value = [];
       }
     };
 
@@ -436,9 +471,72 @@ export default {
       }
     };
 
+    const startQuiz = (quiz) => {
+      activeQuiz.value = quiz;
+      remainingTime.value = quiz.duration * 60; // Convert minutes to seconds
+      currentQuestion.value = 0;
+      selectedAnswer.value = null;
+    };
+
+    const selectAnswer = (index) => {
+      selectedAnswer.value = index;
+    };
+
+    const nextQuestion = () => {
+      if (currentQuestion.value < activeQuiz.value.questions.length - 1) {
+        currentQuestion.value++;
+        selectedAnswer.value = null;
+      }
+    };
+
+    const previousQuestion = () => {
+      if (currentQuestion.value > 0) {
+        currentQuestion.value--;
+        selectedAnswer.value = null;
+      }
+    };
+
+    const submitQuiz = async () => {
+      try {
+        const response = await studentService.submitQuiz({
+          quizId: activeQuiz.value._id,
+          answers: activeQuiz.value.questions.map((q, index) => ({
+            questionId: q._id,
+            selectedAnswer: selectedAnswer.value
+          }))
+        });
+        if (response.success) {
+          quizResult.value = response.data;
+          activeQuiz.value = null;
+          fetchResults(); // Refresh results list
+        }
+      } catch (err) {
+        console.error('Error submitting quiz:', err);
+      }
+    };
+
+    const reviewQuiz = (resultId) => {
+      const result = quizResults.value.find(r => r._id === resultId);
+      if (result) {
+        quizResult.value = result;
+      }
+    };
+
+    const reviewAnswers = () => {
+      quizResult.value = null;
+    };
+
+    const formatTime = (seconds) => {
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = seconds % 60;
+      return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    };
+
     // Lifecycle hooks
     onMounted(() => {
       fetchStudentData();
+      fetchQuizzes();
+      fetchResults();
     });
 
     return {
@@ -457,10 +555,26 @@ export default {
       totalQuizzesTaken,
       averageScore,
       totalPoints,
+      currentPath,
+      availableQuizzes,
+      activeQuiz,
+      quizResult,
+      quizResults,
+      remainingTime,
+      currentQuestion,
+      selectedAnswer,
       toggleSidebar,
       navigateToHome,
       updateProfile,
-      handleAvatarChange
+      handleAvatarChange,
+      startQuiz,
+      selectAnswer,
+      nextQuestion,
+      previousQuestion,
+      submitQuiz,
+      reviewQuiz,
+      reviewAnswers,
+      formatTime
     };
   }
 };
