@@ -42,7 +42,6 @@
 
       <section id="faq">
         <h2>Frequently Asked Questions</h2>
-        <h3><button @click="$router.push('/teacher')">Go to Teacher Panel</button></h3>
         <p>Here you can find answers to the most common questions about our quiz system.</p>
       </section>
     </main>

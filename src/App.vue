@@ -11,10 +11,8 @@ export default {
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
           <div class="flex">
-            <div class="flex-shrink-0 flex items-center">
-              <img class="h-8 w-auto" src="@/assets/logo.svg" alt="EVOS" />
-            </div>
-            <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+        
+            <!-- <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
               <router-link
                 to="/"
                 class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
@@ -33,27 +31,7 @@ export default {
               >
                 Profile
               </router-link>
-            </div>
-          </div>
-          <div class="hidden sm:ml-6 sm:flex sm:items-center">
-            <button
-              v-if="!isAuthenticated"
-              @click="$router.push('/login')"
-              class="btn-primary"
-            >
-              Login
-            </button>
-            <div v-else class="ml-3 relative">
-              <div class="flex items-center space-x-4">
-                <span class="text-gray-700">{{ user?.firstName }}</span>
-                <button
-                  @click="logout"
-                  class="btn-secondary"
-                >
-                  Logout
-                </button>
-              </div>
-            </div>
+            </div> -->
           </div>
         </div>
       </div>
