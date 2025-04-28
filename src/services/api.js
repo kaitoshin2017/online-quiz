@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5001/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
 const api = axios.create({
     baseURL: API_URL,
@@ -9,49 +9,96 @@ const api = axios.create({
     }
 });
 
-// Add token to requests if it exists
-api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+// Add a request interceptor to add the auth token to requests
+api.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
     }
-    return config;
-});
+);
+
+// Add a response interceptor to handle token expiration
+api.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        const originalRequest = error.config;
+
+        // If the error is 401 and we haven't tried to refresh the token yet
+        if (error.response?.status === 401 && !originalRequest._retry) {
+            originalRequest._retry = true;
+
+            try {
+                // Try to refresh the token
+                const refreshToken = localStorage.getItem('refreshToken');
+                if (refreshToken) {
+                    const response = await axios.post(`${API_URL}/auth/refresh-token`, {
+                        refreshToken,
+                    });
+
+                    const { token } = response.data;
+                    localStorage.setItem('token', token);
+
+                    // Retry the original request with the new token
+                    originalRequest.headers.Authorization = `Bearer ${token}`;
+                    return api(originalRequest);
+                }
+            } catch (refreshError) {
+                // If refresh fails, clear tokens and redirect to login
+                localStorage.removeItem('token');
+                localStorage.removeItem('refreshToken');
+                window.location.href = '/login';
+                return Promise.reject(refreshError);
+            }
+        }
+
+        return Promise.reject(error);
+    }
+);
 
 export const authService = {
-    async login(email, password) {
-        const response = await api.post('/auth/login', { email, password });
+    register: async (userData) => {
+        const response = await api.post('/auth/signup', userData);
         if (response.data.token) {
             localStorage.setItem('token', response.data.token);
-            localStorage.setItem('user', JSON.stringify(response.data.user));
         }
         return response.data;
     },
 
-    async signup(formData) {
-        const response = await api.post('/auth/signup', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
-        });
+    login: async (credentials) => {
+        const response = await api.post('/auth/login', credentials);
+        if (response.data.token) {
+            localStorage.setItem('token', response.data.token);
+        }
         return response.data;
     },
 
-    logout() {
+    logout: () => {
         localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        localStorage.removeItem('refreshToken');
     },
 
-    getCurrentUser() {
-        const user = localStorage.getItem('user');
-        return user ? JSON.parse(user) : null;
-    }
+    getCurrentUser: async () => {
+        const response = await api.get('/auth/me');
+        return response.data;
+    },
 };
 
 export const studentService = {
-    getProfile: () => api.get('/student/profile'),
-    updateProfile: (profileData) => api.put('/student/profile', profileData),
-    getDashboard: () => api.get('/student/dashboard')
+    getProfile: async () => {
+        const response = await api.get('/students/profile');
+        return response.data;
+    },
+
+    updateProfile: async (profileData) => {
+        const response = await api.put('/students/profile', profileData);
+        return response.data;
+    },
 };
 
 export const quizzes = {

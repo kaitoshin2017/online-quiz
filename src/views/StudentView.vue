@@ -116,20 +116,86 @@
       <!-- Profile Section -->
       <section v-if="activeTab === 'profile'" id="profile" class="profile-section">
         <h2><i class="fas fa-user"></i> My Profile</h2>
-        <div class="profile-container">
+        
+        <div v-if="loading" class="loading-spinner">
+          <i class="fas fa-spinner fa-spin"></i> Loading...
+        </div>
+        
+        <div v-else-if="error" class="error-message">
+          <i class="fas fa-exclamation-circle"></i> {{ error }}
+        </div>
+        
+        <div v-else class="profile-container">
           <div class="profile-header">
             <div class="profile-avatar">
               <img :src="studentAvatar" alt="Profile Picture">
-              <button class="change-avatar-btn">
+              <input 
+                type="file" 
+                accept="image/*" 
+                @change="handleAvatarChange"
+                class="avatar-input"
+                v-if="editMode"
+              >
+              <button 
+                class="change-avatar-btn"
+                @click="editMode = true"
+                v-if="!editMode"
+              >
                 <i class="fas fa-camera"></i>
               </button>
             </div>
             <div class="profile-info">
-              <h3>{{ studentName }}</h3>
-              <p class="student-id">Student ID: {{ studentId }}</p>
-              <p class="student-email">{{ studentEmail }}</p>
+              <template v-if="!editMode">
+                <h3>{{ studentName }}</h3>
+                <p class="student-id">Student ID: {{ studentId }}</p>
+                <p class="student-email">{{ studentEmail }}</p>
+                <p v-if="studentData?.profile?.phone" class="student-phone">
+                  <i class="fas fa-phone"></i> {{ studentData.profile.phone }}
+                </p>
+                <p v-if="studentData?.profile?.address" class="student-address">
+                  <i class="fas fa-map-marker-alt"></i> {{ studentData.profile.address }}
+                </p>
+                <p v-if="studentData?.profile?.bio" class="student-bio">
+                  {{ studentData.profile.bio }}
+                </p>
+              </template>
+              <form v-else @submit.prevent="updateProfile" class="profile-form">
+                <div class="form-group">
+                  <label>First Name</label>
+                  <input v-model="profileForm.firstName" type="text" required>
+                </div>
+                <div class="form-group">
+                  <label>Last Name</label>
+                  <input v-model="profileForm.lastName" type="text" required>
+                </div>
+                <div class="form-group">
+                  <label>Email</label>
+                  <input v-model="profileForm.email" type="email" required>
+                </div>
+                <div class="form-group">
+                  <label>Phone</label>
+                  <input v-model="profileForm.phone" type="tel">
+                </div>
+                <div class="form-group">
+                  <label>Address</label>
+                  <input v-model="profileForm.address" type="text">
+                </div>
+                <div class="form-group">
+                  <label>Bio</label>
+                  <textarea v-model="profileForm.bio" rows="3"></textarea>
+                </div>
+                <div class="form-actions">
+                  <button type="submit" class="save-btn" :disabled="loading">
+                    <i class="fas fa-save"></i> Save Changes
+                  </button>
+                  <button type="button" class="cancel-btn" @click="editMode = false">
+                    <i class="fas fa-times"></i> Cancel
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
+
           <div class="profile-stats">
             <div class="stat-card">
               <i class="fas fa-trophy"></i>
@@ -153,8 +219,9 @@
               </div>
             </div>
           </div>
-          <div class="profile-actions">
-            <button class="edit-profile-btn">
+
+          <div class="profile-actions" v-if="!editMode">
+            <button class="edit-profile-btn" @click="editMode = true">
               <i class="fas fa-edit"></i> Edit Profile
             </button>
             <button class="change-password-btn">
@@ -243,148 +310,158 @@
 
 <script>
 import Logo from '../components/Logo.vue'
+import studentService from '../services/studentService';
+import { ref, onMounted, computed } from 'vue';
+import { useRouter } from 'vue-router';
 
 export default {
   name: "StudentView",
   components: {
     Logo
   },
-  data() {
-    return {
-      activeTab: 'quizzes',
-      searchQuery: '',
-      studentName: 'John Doe',
-      studentAvatar: 'https://via.placeholder.com/40',
-      isSidebarOpen: false,
-      currentPath: '/',
-      availableQuizzes: [
-        {
-          id: 1,
-          title: "Mathematics Basics",
-          description: "Test your knowledge of basic mathematics concepts",
-          duration: 30,
-          questions: 10,
-          points: 100,
-          status: "Available"
-        },
-        {
-          id: 2,
-          title: "Science Fundamentals",
-          description: "Basic concepts in physics and chemistry",
-          duration: 45,
-          questions: 15,
-          points: 150,
-          status: "Available"
-        }
-      ],
-      activeQuiz: null,
-      currentQuestion: 0,
-      selectedAnswer: null,
-      remainingTime: 0,
-      quizResult: null,
-      timer: null,
-      quizResults: [
-        {
-          id: 1,
-          title: "Mathematics Basics",
-          score: 85,
-          correctAnswers: 8,
-          wrongAnswers: 2,
-          timeTaken: 30,
-          date: "2023-04-15"
-        },
-        {
-          id: 2,
-          title: "Science Fundamentals",
-          score: 78,
-          correctAnswers: 7,
-          wrongAnswers: 3,
-          timeTaken: 45,
-          date: "2023-04-10"
-        }
-      ],
-      totalQuizzesTaken: 2,
-      averageScore: 81.5,
-      totalPoints: 250,
-      studentId: "S12345",
-      studentEmail: "john.doe@example.com"
+  setup() {
+    const router = useRouter();
+    const isSidebarOpen = ref(false);
+    const activeTab = ref('quizzes');
+    const searchQuery = ref('');
+    const studentData = ref(null);
+    const loading = ref(false);
+    const error = ref(null);
+    const editMode = ref(false);
+    const profileForm = ref({
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+      address: '',
+      bio: '',
+      avatar: ''
+    });
+
+    // Computed properties
+    const studentName = computed(() => {
+      if (!studentData.value) return '';
+      return `${studentData.value.firstName} ${studentData.value.lastName}`;
+    });
+
+    const studentAvatar = computed(() => {
+      return studentData.value?.avatar || '/default-avatar.png';
+    });
+
+    const studentEmail = computed(() => {
+      return studentData.value?.email || '';
+    });
+
+    const studentId = computed(() => {
+      return studentData.value?._id || '';
+    });
+
+    const totalQuizzesTaken = computed(() => {
+      return studentData.value?.statistics?.totalQuizzes || 0;
+    });
+
+    const averageScore = computed(() => {
+      return studentData.value?.statistics?.averageScore || 0;
+    });
+
+    const totalPoints = computed(() => {
+      return studentData.value?.statistics?.totalPoints || 0;
+    });
+
+    // Methods
+    const toggleSidebar = () => {
+      isSidebarOpen.value = !isSidebarOpen.value;
     };
-  },
-  methods: {
-    toggleSidebar() {
-      this.isSidebarOpen = !this.isSidebarOpen;
-    },
-    navigateToHome() {
-      this.$router.push('/');
-      this.currentPath = '/';
-      this.activeTab = 'quizzes'; // Reset to default tab
-    },
-    startQuiz(quiz) {
-      this.activeQuiz = {
-        ...quiz,
-        questions: [
-          {
-            question: "What is 2 + 2?",
-            options: ["3", "4", "5", "6"],
-            correctAnswer: 1
-          },
-          // Add more questions here
-        ]
-      };
-      this.remainingTime = quiz.duration * 60;
-      this.startTimer();
-    },
-    startTimer() {
-      this.timer = setInterval(() => {
-        if (this.remainingTime > 0) {
-          this.remainingTime--;
-        } else {
-          this.submitQuiz();
+
+    const navigateToHome = () => {
+      router.push('/');
+    };
+
+    const fetchStudentData = async () => {
+      loading.value = true;
+      error.value = null;
+      try {
+        const response = await studentService.getDashboardData();
+        if (response.success) {
+          studentData.value = response.data;
+          // Initialize profile form with current data
+          profileForm.value = {
+            firstName: studentData.value.profile.firstName,
+            lastName: studentData.value.profile.lastName,
+            email: studentData.value.profile.email,
+            phone: studentData.value.profile.phone || '',
+            address: studentData.value.profile.address || '',
+            bio: studentData.value.profile.bio || '',
+            avatar: studentData.value.profile.avatar || ''
+          };
         }
-      }, 1000);
-    },
-    formatTime(seconds) {
-      const minutes = Math.floor(seconds / 60);
-      const remainingSeconds = seconds % 60;
-      return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-    },
-    selectAnswer(index) {
-      this.selectedAnswer = index;
-    },
-    previousQuestion() {
-      if (this.currentQuestion > 0) {
-        this.currentQuestion--;
-        this.selectedAnswer = null;
+      } catch (err) {
+        error.value = err.message;
+        console.error('Error fetching student data:', err);
+      } finally {
+        loading.value = false;
       }
-    },
-    nextQuestion() {
-      if (this.currentQuestion < this.activeQuiz.questions.length - 1) {
-        this.currentQuestion++;
-        this.selectedAnswer = null;
+    };
+
+    const updateProfile = async () => {
+      loading.value = true;
+      error.value = null;
+      try {
+        const response = await studentService.updateProfile(profileForm.value);
+        if (response.success) {
+          studentData.value = {
+            ...studentData.value,
+            profile: response.data
+          };
+          editMode.value = false;
+        }
+      } catch (err) {
+        error.value = err.message;
+        console.error('Error updating profile:', err);
+      } finally {
+        loading.value = false;
       }
-    },
-    submitQuiz() {
-      clearInterval(this.timer);
-      this.quizResult = {
-        title: this.activeQuiz.title,
-        score: 85,
-        correctAnswers: 8,
-        wrongAnswers: 2,
-        timeTaken: Math.floor((this.activeQuiz.duration * 60 - this.remainingTime) / 60)
-      };
-      this.activeQuiz = null;
-    },
-    reviewAnswers() {
-      // Implement review functionality
-    },
-    reviewQuiz(id) {
-      // Implement review quiz functionality
-    }
-  },
-  beforeUnmount() {
-    if (this.timer) {
-      clearInterval(this.timer);
-    }
+    };
+
+    const handleAvatarChange = async (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        // Here you would typically upload the file to your server
+        // and get back a URL to use as the avatar
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          profileForm.value.avatar = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+
+    // Lifecycle hooks
+    onMounted(() => {
+      fetchStudentData();
+    });
+
+    return {
+      isSidebarOpen,
+      activeTab,
+      searchQuery,
+      studentData,
+      loading,
+      error,
+      editMode,
+      profileForm,
+      studentName,
+      studentAvatar,
+      studentEmail,
+      studentId,
+      totalQuizzesTaken,
+      averageScore,
+      totalPoints,
+      toggleSidebar,
+      navigateToHome,
+      updateProfile,
+      handleAvatarChange
+    };
   }
 };
 </script>
@@ -1528,5 +1605,74 @@ section {
     width: 100%;
     justify-content: center;
   }
+}
+
+.profile-form {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.save-btn,
+.cancel-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.save-btn {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+}
+
+.cancel-btn {
+  background-color: #f44336;
+  color: white;
+  border: none;
+}
+
+.avatar-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.loading-spinner,
+.error-message {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.2rem;
+}
+
+.error-message {
+  color: #f44336;
 }
 </style>

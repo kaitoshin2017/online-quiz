@@ -7,6 +7,7 @@ import TeacherPannel from '../views/TeacherPannel.vue'
 import StudentView from '../views/StudentView.vue'
 import AdminPanel from '../views/AdminPanel.vue'
 import SignupView from '../views/SignupView.vue'
+import FAQView from '../views/FAQView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -70,7 +71,12 @@ const router = createRouter({
       path: '/review-quiz/:id',
       name: 'review-quiz',
       component: () => import('../views/ReviewQuizView.vue'),
-    }
+    },
+    {
+      path: '/faq',
+      name: 'faq',
+      component: FAQView,
+    },
   ],
 })
 

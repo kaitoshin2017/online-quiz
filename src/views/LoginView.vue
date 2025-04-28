@@ -169,7 +169,6 @@ export default {
   }
 }
 </script>
-
 <style scoped>
 .login-container {
   min-height: 100vh;

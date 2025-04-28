@@ -355,7 +355,6 @@ export default {
   }
 }
 </script>
-
 <style scoped>
 .registration-container {
   min-height: 100vh;
