@@ -7,6 +7,8 @@ const auth = require('../middleware/auth');
 const Settings = require('../models/Settings');
 const Teacher = require('../models/Teacher');
 const Student = require('../models/Student');
+const teacherController = require('../controllers/teacherController');
+const upload = require('../middleware/upload');
 
 // Get teacher dashboard data
 router.get('/dashboard', auth, async (req, res) => {
@@ -165,211 +167,74 @@ router.get('/results', auth, async (req, res) => {
 
 // Get teacher profile
 router.get('/profile', auth, async (req, res) => {
-    try {
-        let teacher = await Teacher.findById(req.user.id).select('-password');
-        
-        // If teacher doesn't exist in Teacher model but exists in User model
-        if (!teacher && req.user.role === 'teacher') {
-            const user = await User.findById(req.user.id);
-            teacher = new Teacher({
-                _id: user._id,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                email: user.email,
-                password: user.password,
-                avatar: user.avatar,
-                role: 'teacher'
-            });
-            await teacher.save();
-            console.log('Created new teacher record for existing user:', teacher.email);
-        }
-
-        if (!teacher) {
-            return res.status(404).json({
-                success: false,
-                message: 'Teacher not found'
-            });
-        }
-
-        res.json({
-            success: true,
-            teacher: {
-                id: teacher._id,
-                firstName: teacher.firstName,
-                lastName: teacher.lastName,
-                email: teacher.email,
-                phone: teacher.phone,
-                bio: teacher.bio,
-                avatar: teacher.avatar
-            }
-        });
-    } catch (error) {
-        console.error('Error fetching profile:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error fetching profile',
-            error: error.message
-        });
+  try {
+    const teacher = await User.findById(req.user._id).select('-password -tokens');
+    if (!teacher) {
+      return res.status(404).json({
+        success: false,
+        message: 'Teacher not found'
+      });
     }
+
+    res.json({
+      success: true,
+      data: teacher
+    });
+  } catch (error) {
+    console.error('Error fetching teacher profile:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching teacher profile'
+    });
+  }
 });
 
 // Update teacher profile
 router.put('/profile', auth, async (req, res) => {
-    try {
-        const updates = req.body;
-        const allowedUpdates = ['firstName', 'lastName', 'phone', 'bio', 'avatar'];
-        const updateFields = {};
-
-        Object.keys(updates).forEach(key => {
-            if (allowedUpdates.includes(key)) {
-                updateFields[key] = updates[key];
-            }
-        });
-
-        let teacher = await Teacher.findById(req.user.id);
-
-        // If teacher doesn't exist in Teacher model but exists in User model
-        if (!teacher && req.user.role === 'teacher') {
-            const user = await User.findById(req.user.id);
-            teacher = new Teacher({
-                _id: user._id,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                email: user.email,
-                password: user.password,
-                avatar: user.avatar,
-                role: 'teacher',
-                ...updateFields
-            });
-            await teacher.save();
-            console.log('Created and updated new teacher record for existing user:', teacher.email);
-        } else if (teacher) {
-            Object.assign(teacher, updateFields);
-            await teacher.save();
-            console.log('Updated existing teacher record:', teacher.email);
-        }
-
-        if (!teacher) {
-            return res.status(404).json({
-                success: false,
-                message: 'Teacher not found'
-            });
-        }
-
-        // Also update the User model to keep data in sync
-        await User.findByIdAndUpdate(req.user.id, updateFields);
-
-        res.json({
-            success: true,
-            teacher: {
-                id: teacher._id,
-                firstName: teacher.firstName,
-                lastName: teacher.lastName,
-                email: teacher.email,
-                phone: teacher.phone,
-                bio: teacher.bio,
-                avatar: teacher.avatar
-            }
-        });
-    } catch (error) {
-        console.error('Error updating profile:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error updating profile',
-            error: error.message
-        });
+  try {
+    const { firstName, lastName, email, phone, bio } = req.body;
+    const teacher = await User.findById(req.user._id);
+    
+    if (!teacher) {
+      return res.status(404).json({
+        success: false,
+        message: 'Teacher not found'
+      });
     }
+
+    // Update fields if provided
+    if (firstName) teacher.firstName = firstName;
+    if (lastName) teacher.lastName = lastName;
+    if (email) teacher.email = email;
+    if (phone) teacher.phone = phone;
+    if (bio) teacher.bio = bio;
+
+    await teacher.save();
+
+    res.json({
+      success: true,
+      data: teacher
+    });
+  } catch (error) {
+    console.error('Error updating teacher profile:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating teacher profile'
+    });
+  }
 });
 
 // Get teacher settings
-router.get('/settings', auth, async (req, res) => {
-    try {
-        let settings = await Settings.findOne({ userId: req.user.id });
-        
-        // If no settings exist, create default settings
-        if (!settings) {
-            settings = new Settings({
-                userId: req.user.id,
-                notifications: {
-                    email: false,
-                    quizResults: false,
-                    studentActivity: false
-                },
-                quizPreferences: {
-                    defaultDuration: 30,
-                    questionsPerPage: '10',
-                    showTimer: true,
-                    randomizeQuestions: false
-                },
-                theme: {
-                    darkMode: false,
-                    themeColor: 'default'
-                }
-            });
-            await settings.save();
-        }
-
-        res.json({
-            success: true,
-            settings
-        });
-    } catch (error) {
-        console.error('Error fetching settings:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error fetching settings',
-            error: error.message
-        });
-    }
-});
+router.get('/settings', auth, teacherController.getSettings);
 
 // Update teacher settings
-router.put('/settings', auth, async (req, res) => {
-    try {
-        const updates = req.body;
-        const allowedUpdates = ['notifications', 'quizPreferences', 'theme'];
-        
-        // Validate updates
-        const isValidOperation = Object.keys(updates).every(update => 
-            allowedUpdates.includes(update)
-        );
+router.put('/settings', auth, teacherController.updateSettings);
 
-        if (!isValidOperation) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid updates'
-            });
-        }
+// Update avatar
+router.post('/avatar', auth, upload.single('avatar'), teacherController.updateAvatar);
 
-        let settings = await Settings.findOne({ userId: req.user.id });
-        
-        if (!settings) {
-            settings = new Settings({
-                userId: req.user.id,
-                ...updates
-            });
-        } else {
-            // Update only the provided fields
-            Object.keys(updates).forEach(key => {
-                settings[key] = updates[key];
-            });
-        }
-
-        await settings.save();
-
-        res.json({
-            success: true,
-            settings
-        });
-    } catch (error) {
-        console.error('Error updating settings:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error updating settings',
-            error: error.message
-        });
-    }
-});
+// Change password
+router.put('/password', auth, teacherController.changePassword);
 
 // Create a new quiz
 router.post('/quizzes', auth, async (req, res) => {

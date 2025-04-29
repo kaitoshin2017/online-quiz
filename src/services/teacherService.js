@@ -4,58 +4,89 @@ const API_URL = 'http://localhost:3000/api/teacher';
 
 class TeacherService {
   constructor() {
-    this.api = axios.create({
-      baseURL: API_URL,
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-
-    // Add request interceptor to add token to all requests
-    this.api.interceptors.request.use(
-      (config) => {
-        const token = localStorage.getItem('token');
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-      },
-      (error) => {
-        return Promise.reject(error);
-      }
-    );
-
-    // Add response interceptor to handle token expiration
-    this.api.interceptors.response.use(
-      (response) => response,
-      (error) => {
-        if (error.response && error.response.status === 401) {
-          this.setAuthToken(null);
-        }
-        return Promise.reject(error);
-      }
-    );
+    this.token = localStorage.getItem('token');
   }
 
-  // Update the authorization token
+  initializeToken() {
+    this.token = localStorage.getItem('token');
+  }
+
   setAuthToken(token) {
+    this.token = token;
     if (token) {
       localStorage.setItem('token', token);
-      this.api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     } else {
       localStorage.removeItem('token');
-      delete this.api.defaults.headers.common['Authorization'];
     }
   }
 
-  // Initialize token from localStorage
-  initializeToken() {
-    const token = localStorage.getItem('token');
-    if (token) {
-      this.setAuthToken(token);
-      return true;
+  async getProfile() {
+    try {
+      const response = await axios.get(`${API_URL}/profile`, {
+        headers: { Authorization: `Bearer ${this.token}` }
+      });
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch profile');
     }
-    return false;
+  }
+
+  async updateProfile(profileData) {
+    try {
+      const response = await axios.put(`${API_URL}/profile`, profileData, {
+        headers: { Authorization: `Bearer ${this.token}` }
+      });
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to update profile');
+    }
+  }
+
+  async getSettings() {
+    try {
+      const response = await axios.get(`${API_URL}/settings`, {
+        headers: { Authorization: `Bearer ${this.token}` }
+      });
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch settings');
+    }
+  }
+
+  async updateSettings(settings) {
+    try {
+      const response = await axios.put(`${API_URL}/settings`, settings, {
+        headers: { Authorization: `Bearer ${this.token}` }
+      });
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to update settings');
+    }
+  }
+
+  async updateAvatar(formData) {
+    try {
+      const response = await axios.post(`${API_URL}/avatar`, formData, {
+        headers: {
+          Authorization: `Bearer ${this.token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to update avatar');
+    }
+  }
+
+  async changePassword(passwordData) {
+    try {
+      const response = await axios.put(`${API_URL}/password`, passwordData, {
+        headers: { Authorization: `Bearer ${this.token}` }
+      });
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to change password');
+    }
   }
 
   // Login method
@@ -78,38 +109,12 @@ class TeacherService {
     }
   }
 
-  // Get teacher profile
-  async getProfile() {
-    try {
-      const response = await this.api.get('/profile');
-      if (response.data.success) {
-        return response.data;
-      } else {
-        throw new Error('Invalid profile response');
-      }
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  // Update teacher profile
-  async updateProfile(profileData) {
-    try {
-      const response = await this.api.put('/profile', profileData);
-      if (response.data.success) {
-        return response.data;
-      } else {
-        throw new Error('Invalid update response');
-      }
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
   // Get dashboard data
   async getDashboard() {
     try {
-      const response = await this.api.get('/dashboard');
+      const response = await axios.get(`${API_URL}/dashboard`, {
+        headers: { Authorization: `Bearer ${this.token}` }
+      });
       if (response.data.success) {
         return response.data;
       } else {
@@ -123,7 +128,9 @@ class TeacherService {
   // Get quizzes
   async getQuizzes() {
     try {
-      const response = await this.api.get('/quizzes');
+      const response = await axios.get(`${API_URL}/quizzes`, {
+        headers: { Authorization: `Bearer ${this.token}` }
+      });
       if (response.data.success) {
         return response.data;
       } else {
@@ -137,7 +144,9 @@ class TeacherService {
   // Get students
   async getStudents() {
     try {
-      const response = await this.api.get('/students');
+      const response = await axios.get(`${API_URL}/students`, {
+        headers: { Authorization: `Bearer ${this.token}` }
+      });
       if (response.data.success) {
         return response.data;
       } else {
@@ -155,7 +164,10 @@ class TeacherService {
       if (quizId) params.quizId = quizId;
       if (timeRange) params.timeRange = timeRange;
 
-      const response = await this.api.get('/results', { params });
+      const response = await axios.get(`${API_URL}/results`, {
+        params,
+        headers: { Authorization: `Bearer ${this.token}` }
+      });
       if (response.data.success) {
         return response.data;
       } else {
@@ -166,38 +178,12 @@ class TeacherService {
     }
   }
 
-  // Get settings
-  async getSettings() {
-    try {
-      const response = await this.api.get('/settings');
-      if (response.data.success) {
-        return response.data;
-      } else {
-        throw new Error('Invalid settings response');
-      }
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  // Update settings
-  async updateSettings(settings) {
-    try {
-      const response = await this.api.put('/settings', settings);
-      if (response.data.success) {
-        return response.data;
-      } else {
-        throw new Error('Invalid settings response');
-      }
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
   // Create quiz
   async createQuiz(quizData) {
     try {
-      const response = await this.api.post('/quizzes', quizData);
+      const response = await axios.post(`${API_URL}/quizzes`, quizData, {
+        headers: { Authorization: `Bearer ${this.token}` }
+      });
       if (response.data.success) {
         return response.data;
       } else {

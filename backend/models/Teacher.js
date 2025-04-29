@@ -45,7 +45,28 @@ const teacherSchema = new mongoose.Schema({
             type: String,
             required: true
         }
-    }]
+    }],
+    settings: {
+        notifications: {
+            email: { type: Boolean, default: false },
+            quizResults: { type: Boolean, default: false },
+            studentActivity: { type: Boolean, default: false }
+        },
+        quizPreferences: {
+            defaultDuration: { type: Number, default: 30 },
+            questionsPerPage: { type: String, default: '10' },
+            showTimer: { type: Boolean, default: true },
+            randomizeQuestions: { type: Boolean, default: false }
+        },
+        themePreferences: {
+            darkMode: { type: Boolean, default: false },
+            theme: { type: String, default: 'default' }
+        }
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    }
 }, {
     timestamps: true
 });
