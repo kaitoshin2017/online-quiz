@@ -176,9 +176,16 @@ router.get('/profile', auth, async (req, res) => {
       });
     }
 
+    // Get teacher's quizzes count
+    const quizzesCount = await Quiz.countDocuments({ createdBy: teacher._id });
+    
+    // Get teacher's students count
+    const studentsCount = await Student.countDocuments({ teacher: teacher._id });
+
     res.json({
       success: true,
       teacher: {
+        id: teacher._id,
         firstName: teacher.firstName,
         lastName: teacher.lastName,
         email: teacher.email,
@@ -186,7 +193,11 @@ router.get('/profile', auth, async (req, res) => {
         bio: teacher.bio,
         avatar: teacher.avatar,
         role: teacher.role,
-        settings: teacher.settings
+        settings: teacher.settings,
+        statistics: {
+          quizzesCount,
+          studentsCount
+        }
       }
     });
   } catch (error) {

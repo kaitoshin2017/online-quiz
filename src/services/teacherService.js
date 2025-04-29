@@ -30,11 +30,30 @@ class TeacherService {
         throw new Error(response.data.message || 'Failed to fetch profile');
       }
 
+      if (!response.data.teacher) {
+        throw new Error('Teacher profile data is missing');
+      }
+
       return {
         success: true,
-        teacher: response.data.teacher
+        teacher: {
+          id: response.data.teacher.id,
+          firstName: response.data.teacher.firstName,
+          lastName: response.data.teacher.lastName,
+          email: response.data.teacher.email,
+          phone: response.data.teacher.phone,
+          bio: response.data.teacher.bio,
+          avatar: response.data.teacher.avatar,
+          role: response.data.teacher.role,
+          settings: response.data.teacher.settings || {},
+          statistics: response.data.teacher.statistics || {
+            quizzesCount: 0,
+            studentsCount: 0
+          }
+        }
       };
     } catch (error) {
+      console.error('Error fetching teacher profile:', error);
       throw new Error(error.response?.data?.message || 'Failed to fetch profile');
     }
   }
