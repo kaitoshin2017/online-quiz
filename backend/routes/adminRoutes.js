@@ -230,4 +230,137 @@ router.post('/init', async (req, res) => {
   }
 });
 
+// Create a new user
+router.post('/users', async (req, res) => {
+  try {
+    const { firstName, lastName, email, password, role, phone, address } = req.body;
+
+    // Validate required fields
+    if (!firstName || !lastName || !email || !password || !role) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields'
+      });
+    }
+
+    // Check if email already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email already exists'
+      });
+    }
+
+    // Create new user
+    const user = new User({
+      firstName,
+      lastName,
+      email,
+      password,
+      role,
+      phone,
+      address
+    });
+
+    await user.save();
+
+    // Remove password from response
+    const userResponse = user.toJSON();
+    delete userResponse.password;
+
+    res.status(201).json({
+      success: true,
+      user: userResponse
+    });
+  } catch (error) {
+    console.error('Error creating user:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error occurred'
+    });
+  }
+});
+
+// Update user
+router.put('/users/:id', async (req, res) => {
+  try {
+    const { firstName, lastName, email, role, phone, address, status } = req.body;
+    const userId = req.params.id;
+
+    // Find user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Update allowed fields
+    const updates = {
+      firstName,
+      lastName,
+      email,
+      role,
+      phone,
+      address,
+      status
+    };
+
+    // Remove undefined fields
+    Object.keys(updates).forEach(key => {
+      if (updates[key] === undefined) {
+        delete updates[key];
+      }
+    });
+
+    // Update user
+    Object.assign(user, updates);
+    await user.save();
+
+    // Remove password from response
+    const userResponse = user.toJSON();
+    delete userResponse.password;
+
+    res.json({
+      success: true,
+      user: userResponse
+    });
+  } catch (error) {
+    console.error('Error updating user:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error occurred'
+    });
+  }
+});
+
+// Delete user
+router.delete('/users/:id', async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    // Find and delete user
+    const user = await User.findByIdAndDelete(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'User deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error occurred'
+    });
+  }
+});
+
 module.exports = router; 

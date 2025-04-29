@@ -60,7 +60,9 @@
             <span class="user-name">{{ adminName }}</span>
           </div>
           <div class="avatar-container">
-            <img :src="adminAvatar" alt="Admin Avatar" class="avatar">
+            <div class="avatar-placeholder">
+              <i class="fas fa-user"></i>
+            </div>
             <div class="status-indicator"></div>
           </div>
           <button class="logout-btn" @click="logout">
@@ -104,6 +106,7 @@
         <!-- Quizzes Tab -->
           <QuizManagement v-if="activeTab === 'quizzes'" 
             :quizzes="quizzes"
+            @update:quizzes="updateQuizzes"
           />
 
         <!-- Reports Tab -->
@@ -185,12 +188,20 @@ export default {
         const hasToken = adminService.initializeToken();
         
         if (!hasToken) {
-          // Redirect to login if no token is found
           window.location.href = '/login';
           return;
         }
+
+        // Fetch quizzes first
+        console.log('Fetching initial quizzes...');
+        const quizzesResponse = await adminService.getQuizzes();
+        if (!quizzesResponse.success) {
+          throw new Error(quizzesResponse.message || 'Failed to fetch quizzes');
+        }
+        console.log('Initial quizzes loaded:', quizzesResponse.quizzes);
+        quizzes.value = quizzesResponse.quizzes || [];
         
-        // Fetch admin profile
+        // Rest of the initialization...
         const profileResponse = await adminService.getProfile();
         if (!profileResponse.success) {
           throw new Error(profileResponse.message || 'Failed to fetch profile');
@@ -213,45 +224,21 @@ export default {
         totalQuizzes.value = statistics.totalQuizzes;
         recentActivities.value = activities;
 
-        // Fetch users
-        const usersResponse = await adminService.getUsers();
-        if (!usersResponse.success) {
-          throw new Error(usersResponse.message || 'Failed to fetch users');
-        }
-        users.value = usersResponse.users;
+        // Fetch other data...
+        const [usersResponse, teachersResponse, studentsResponse] = await Promise.all([
+          adminService.getUsers(),
+          adminService.getTeachers(),
+          adminService.getStudents()
+        ]);
 
-        // Fetch teachers
-        const teachersResponse = await adminService.getTeachers();
-        if (!teachersResponse.success) {
-          throw new Error(teachersResponse.message || 'Failed to fetch teachers');
-        }
-        teachers.value = teachersResponse.teachers;
+        if (usersResponse.success) users.value = usersResponse.users;
+        if (teachersResponse.success) teachers.value = teachersResponse.teachers;
+        if (studentsResponse.success) students.value = studentsResponse.students;
 
-        // Fetch students
-        const studentsResponse = await adminService.getStudents();
-        if (!studentsResponse.success) {
-          throw new Error(studentsResponse.message || 'Failed to fetch students');
-        }
-        students.value = studentsResponse.students;
-
-        // Fetch quizzes
-        const quizzesResponse = await adminService.getQuizzes();
-        if (!quizzesResponse.success) {
-          throw new Error(quizzesResponse.message || 'Failed to fetch quizzes');
-        }
-        quizzes.value = quizzesResponse.quizzes;
-
-        // Fetch settings
-        const settingsResponse = await adminService.getSettings();
-        if (!settingsResponse.success) {
-          throw new Error(settingsResponse.message || 'Failed to fetch settings');
-        }
-        settings.value = settingsResponse.settings;
       } catch (err) {
-        error.value = err.message || 'An error occurred while initializing the admin panel';
         console.error('Error initializing admin panel:', err);
+        error.value = err.message || 'An error occurred while initializing the admin panel';
         
-        // If the error is due to authentication, redirect to login
         if (err.status === 401) {
           window.location.href = '/login';
         }
@@ -286,6 +273,17 @@ export default {
       window.location.href = '/login';
     };
 
+    // Update quizzes method
+    const updateQuizzes = (newQuizzes) => {
+      console.log('Updating quizzes in AdminPanel:', newQuizzes);
+      if (Array.isArray(newQuizzes)) {
+        quizzes.value = [...newQuizzes];
+        console.log('Quizzes updated successfully:', quizzes.value);
+      } else {
+        console.error('Invalid quizzes data received:', newQuizzes);
+      }
+    };
+
     return {
       activeTab,
       searchQuery,
@@ -305,7 +303,8 @@ export default {
       quizzes,
       settings,
       updateSettings,
-      logout
+      logout,
+      updateQuizzes
     };
   }
 }
@@ -493,12 +492,21 @@ nav li:hover i, nav li.active i {
   position: relative;
 }
 
-.avatar {
+.avatar-placeholder {
   width: 40px;
   height: 40px;
   border-radius: 50%;
+  background: #4f46e5;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
   border: 2px solid #4f46e5;
-  padding: 2px;
+}
+
+.avatar-placeholder i {
+  color: white;
 }
 
 .status-indicator {

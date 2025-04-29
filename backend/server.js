@@ -14,8 +14,15 @@ dotenv.config();
 
 const app = express();
 
+// CORS configuration
+app.use(cors({
+    origin: true, // Allow all origins in development
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+}));
+
 // Middleware
-app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -29,33 +36,33 @@ app.use('/api/admin', adminRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({
-    success: false,
-    message: 'Something went wrong!',
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined
-  });
+    console.error(err.stack);
+    res.status(500).json({
+        success: false,
+        message: 'Something went wrong!',
+        error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
 });
 
 // MongoDB Connection
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/quiz-app';
 
 mongoose.connect(MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 5000,
-  socketTimeoutMS: 45000,
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    serverSelectionTimeoutMS: 5000,
+    socketTimeoutMS: 45000,
 })
-  .then(() => {
+.then(() => {
     console.log('Connected to MongoDB');
     // Start the server only after MongoDB connection is established
-    const PORT = process.env.PORT || 3000;
+    const PORT = 3000; // Fixed port 3000
     app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
+        console.log(`Server is running on port ${PORT}`);
     });
-  })
-  .catch(err => {
+})
+.catch(err => {
     console.error('MongoDB connection error:', err);
     console.log('Please make sure MongoDB is installed and running');
     process.exit(1);
-  }); 
+}); 

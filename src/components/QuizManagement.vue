@@ -1,169 +1,193 @@
 <template>
   <div class="quiz-management">
     <div class="section-header">
-      <h2>Quiz Management</h2>
-      <button class="create-quiz-btn" @click="createNewQuiz">
-        <i class="fas fa-plus"></i> Create New Quiz
+      <div class="header-content">
+        <h2>
+          <i class="fas fa-book-reader"></i>
+          Quiz Management
+        </h2>
+        <p class="subtitle">Create and manage your quizzes</p>
+      </div>
+      <button class="create-quiz-btn primary-btn" @click="createNewQuiz" :disabled="isLoading">
+        <i class="fas fa-plus"></i>
+        <span>{{ isLoading ? 'Creating...' : 'Create New Quiz' }}</span>
+        <div class="btn-background"></div>
       </button>
     </div>
 
-    <div class="filters-bar">
-      <div class="search-box">
-        <i class="fas fa-search"></i>
-        <input type="text" v-model="searchQuery" placeholder="Search quizzes...">
+    <div v-if="error" class="error-message">
+      <i class="fas fa-exclamation-circle"></i>
+      {{ error }}
+      <button class="retry-btn" @click="fetchQuizzes" :disabled="isLoading">
+        <i class="fas fa-sync-alt"></i> Retry
+      </button>
+    </div>
+
+    <div v-if="isLoading && !quizzes.length" class="loading-state">
+      <div class="loading-animation">
+        <div class="spinner"></div>
       </div>
-      <div class="filter-group">
-        <select v-model="subjectFilter" class="filter-select">
-          <option value="all">All Subjects</option>
-          <option v-for="subject in subjects" :key="subject" :value="subject">
-            {{ subject }}
-          </option>
-        </select>
-        <select v-model="statusFilter" class="filter-select">
-          <option value="all">All Status</option>
-          <option value="active">Active</option>
-          <option value="draft">Draft</option>
-          <option value="archived">Archived</option>
-        </select>
+      <p>Loading your quizzes...</p>
+    </div>
+
+    <div v-else-if="!quizzes.length && !error" class="empty-state">
+      <div class="empty-state-content">
+        <i class="fas fa-clipboard-list"></i>
+        <h3>No quizzes yet</h3>
+        <p>Start by creating your first quiz</p>
+        <button class="create-quiz-btn primary-btn" @click="createNewQuiz" :disabled="isLoading">
+          <i class="fas fa-plus"></i>
+          <span>Create Your First Quiz</span>
+          <div class="btn-background"></div>
+        </button>
       </div>
     </div>
 
-    <div class="quizzes-grid">
-      <div v-for="quiz in filteredQuizzes" :key="quiz.id" class="quiz-card">
-        <div class="quiz-header">
-          <div class="quiz-title">
-            <h3>{{ quiz.title }}</h3>
-            <div class="quiz-subject">
-              <i :class="getSubjectIcon(quiz.subject)"></i>
-              <span>{{ quiz.subject }}</span>
-            </div>
-          </div>
-          <span :class="['status-badge', quiz.status]">{{ quiz.status }}</span>
+    <template v-else>
+      <div class="filters-bar">
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input 
+            type="text" 
+            v-model="searchQuery" 
+            placeholder="Search quizzes..."
+            class="search-input"
+          >
         </div>
-
-        <div class="quiz-stats">
-          <div class="stat-item">
-            <i class="fas fa-clock"></i>
-            <div class="stat-info">
-              <span class="stat-value">{{ quiz.duration }}</span>
-              <span class="stat-label">Minutes</span>
-            </div>
+        <div class="filter-group">
+          <div class="select-wrapper">
+            <i class="fas fa-book"></i>
+            <select v-model="subjectFilter" class="filter-select">
+              <option value="all">All Subjects</option>
+              <option v-for="subject in subjects" :key="subject" :value="subject">
+                {{ subject }}
+              </option>
+            </select>
           </div>
-          <div class="stat-item">
-            <i class="fas fa-question-circle"></i>
-            <div class="stat-info">
-              <span class="stat-value">{{ quiz.questions }}</span>
-              <span class="stat-label">Questions</span>
-            </div>
+          <div class="select-wrapper">
+            <i class="fas fa-filter"></i>
+            <select v-model="statusFilter" class="filter-select">
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="draft">Draft</option>
+              <option value="archived">Archived</option>
+            </select>
           </div>
-          <div class="stat-item">
-            <i class="fas fa-users"></i>
-            <div class="stat-info">
-              <span class="stat-value">{{ quiz.participants }}</span>
-              <span class="stat-label">Students</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="quiz-performance">
-          <div class="performance-header">
-            <h4>Average Performance</h4>
-            <span class="average-score">{{ quiz.averageScore }}%</span>
-          </div>
-          <div class="performance-bar">
-            <div class="progress-bar" :style="{ width: quiz.averageScore + '%' }"></div>
-          </div>
-        </div>
-
-        <div class="quiz-details">
-          <div class="detail-item">
-            <i class="fas fa-calendar"></i>
-            <span>Created: {{ formatDate(quiz.createdAt) }}</span>
-          </div>
-          <div class="detail-item">
-            <i class="fas fa-clock"></i>
-            <span>Last updated: {{ formatDate(quiz.updatedAt) }}</span>
-          </div>
-        </div>
-
-        <div class="quiz-actions">
-          <button class="action-btn edit" @click="editQuiz(quiz)">
-            <i class="fas fa-edit"></i>
-            <span>Edit</span>
-          </button>
-          <button class="action-btn preview" @click="previewQuiz(quiz)">
-            <i class="fas fa-eye"></i>
-            <span>Preview</span>
-          </button>
-          <button class="action-btn delete" @click="deleteQuiz(quiz)">
-            <i class="fas fa-trash"></i>
-            <span>Delete</span>
-          </button>
         </div>
       </div>
-    </div>
+
+      <div class="quizzes-grid">
+        <div v-for="quiz in filteredQuizzes" 
+             :key="quiz.id" 
+             class="quiz-card"
+             :class="{ 'status-draft': quiz.status === 'draft' }">
+          <div class="quiz-header">
+            <div class="quiz-title">
+              <h3>{{ quiz.title }}</h3>
+              <div class="quiz-subject">
+                <i :class="getSubjectIcon(quiz.subject)"></i>
+                <span>{{ quiz.subject }}</span>
+              </div>
+            </div>
+            <span :class="['status-badge', quiz.status]">
+              <i class="fas" :class="getStatusIcon(quiz.status)"></i>
+              {{ quiz.status }}
+            </span>
+          </div>
+
+          <div class="quiz-stats">
+            <div class="stat-item">
+              <div class="stat-icon">
+                <i class="fas fa-clock"></i>
+              </div>
+              <div class="stat-info">
+                <span class="stat-value">{{ quiz.duration }}</span>
+                <span class="stat-label">Minutes</span>
+              </div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-icon">
+                <i class="fas fa-question-circle"></i>
+              </div>
+              <div class="stat-info">
+                <span class="stat-value">{{ quiz.questions.length }}</span>
+                <span class="stat-label">Questions</span>
+              </div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-icon">
+                <i class="fas fa-users"></i>
+              </div>
+              <div class="stat-info">
+                <span class="stat-value">{{ quiz.participants }}</span>
+                <span class="stat-label">Students</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="quiz-performance">
+            <div class="performance-header">
+              <h4>Average Performance</h4>
+              <span class="average-score">{{ quiz.averageScore }}%</span>
+            </div>
+            <div class="performance-bar">
+              <div class="progress-bar" 
+                   :style="{ width: quiz.averageScore + '%' }"
+                   :class="getPerformanceClass(quiz.averageScore)">
+              </div>
+            </div>
+          </div>
+
+          <div class="quiz-details">
+            <div class="detail-item">
+              <i class="fas fa-calendar"></i>
+              <span>Created: {{ formatDate(quiz.createdAt) }}</span>
+            </div>
+            <div class="detail-item">
+              <i class="fas fa-clock"></i>
+              <span>Updated: {{ formatDate(quiz.updatedAt) }}</span>
+            </div>
+          </div>
+
+          <div class="quiz-actions">
+            <button class="action-btn edit" @click="editQuiz(quiz)" title="Edit Quiz">
+              <i class="fas fa-edit"></i>
+              <span>Edit</span>
+            </button>
+            <button class="action-btn preview" @click="previewQuiz(quiz)" title="Preview Quiz">
+              <i class="fas fa-eye"></i>
+              <span>Preview</span>
+            </button>
+            <button class="action-btn delete" @click="deleteQuiz(quiz)" title="Delete Quiz">
+              <i class="fas fa-trash"></i>
+              <span>Delete</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </template>
   </div>
 </template>
 
 <script>
+import api from '../services/api';
+
 export default {
   name: 'QuizManagement',
+  props: {
+    quizzes: {
+      type: Array,
+      required: true
+    }
+  },
   data() {
     return {
       searchQuery: '',
       subjectFilter: 'all',
       statusFilter: 'all',
       subjects: ['Mathematics', 'Science', 'English', 'History'],
-      quizzes: [
-        {
-          id: 1,
-          title: 'Algebra Fundamentals',
-          subject: 'Mathematics',
-          status: 'active',
-          duration: 45,
-          questions: 25,
-          participants: 120,
-          averageScore: 78,
-          createdAt: '2024-03-01',
-          updatedAt: '2024-03-15'
-        },
-        {
-          id: 2,
-          title: 'Chemical Reactions',
-          subject: 'Science',
-          status: 'active',
-          duration: 60,
-          questions: 30,
-          participants: 85,
-          averageScore: 82,
-          createdAt: '2024-03-10',
-          updatedAt: '2024-03-14'
-        },
-        {
-          id: 3,
-          title: 'World War II',
-          subject: 'History',
-          status: 'draft',
-          duration: 40,
-          questions: 20,
-          participants: 0,
-          averageScore: 0,
-          createdAt: '2024-03-16',
-          updatedAt: '2024-03-16'
-        },
-        {
-          id: 4,
-          title: 'Literature Analysis',
-          subject: 'English',
-          status: 'archived',
-          duration: 50,
-          questions: 15,
-          participants: 95,
-          averageScore: 75,
-          createdAt: '2024-02-28',
-          updatedAt: '2024-03-10'
-        }
-      ]
+      isLoading: false,
+      error: null
     }
   },
   computed: {
@@ -184,7 +208,45 @@ export default {
       });
     }
   },
+  async created() {
+    console.log('QuizManagement created, initial quizzes:', this.quizzes);
+    if (!this.quizzes || this.quizzes.length === 0) {
+      await this.fetchQuizzes();
+    }
+  },
   methods: {
+    async fetchQuizzes() {
+      try {
+        this.isLoading = true;
+        this.error = null;
+        console.log('Fetching quizzes...');
+        const response = await api.get('/quizzes');
+        console.log('API response:', response);
+        
+        if (response && response.data) {
+          const formattedQuizzes = response.data.map(quiz => ({
+            ...quiz,
+            id: quiz._id || quiz.id, // Ensure we have an id
+            participants: quiz.participants || 0,
+            averageScore: quiz.averageScore || 0,
+            status: quiz.status || 'draft',
+            questions: quiz.questions || [],
+            createdAt: quiz.createdAt || new Date().toISOString(),
+            updatedAt: quiz.updatedAt || new Date().toISOString()
+          }));
+          
+          console.log('Formatted quizzes:', formattedQuizzes);
+          this.$emit('update:quizzes', formattedQuizzes);
+        } else {
+          throw new Error('Invalid response format from API');
+        }
+      } catch (error) {
+        console.error('Error fetching quizzes:', error);
+        this.error = 'Failed to fetch quizzes. Please check your connection and try again.';
+      } finally {
+        this.isLoading = false;
+      }
+    },
     getSubjectIcon(subject) {
       const icons = {
         'Mathematics': 'fas fa-square-root-alt',
@@ -201,151 +263,256 @@ export default {
         day: 'numeric'
       })
     },
-    createNewQuiz() {
-      // Implement quiz creation logic
+    async createNewQuiz() {
+      try {
+        this.isLoading = true;
+        this.error = null;
+        const newQuiz = {
+          title: 'New Quiz',
+          description: '',
+          duration: 30,
+          subject: this.subjects[0],
+          status: 'draft',
+          questions: [{
+            text: 'Sample Question',
+            options: ['Option 1', 'Option 2', 'Option 3', 'Option 4'],
+            correctAnswer: 0,
+            points: 1
+          }]
+        };
+        
+        console.log('Creating new quiz...');
+        const response = await api.post('/quizzes/create', newQuiz);
+        console.log('Quiz created:', response.data);
+        
+        const updatedQuiz = {
+          ...response.data,
+          participants: 0,
+          averageScore: 0,
+          status: 'draft',
+          questions: response.data.questions || newQuiz.questions
+        };
+        
+        console.log('Emitting quiz update...');
+        this.$emit('update:quizzes', [...this.quizzes, updatedQuiz]);
+        
+        // Wait a moment to ensure the parent component updates
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        console.log('Navigating to edit page...');
+        this.$router.push(`/quiz/edit/${response.data._id}`);
+      } catch (error) {
+        console.error('Error creating quiz:', error);
+        this.error = 'Failed to create quiz. Please try again.';
+      } finally {
+        this.isLoading = false;
+      }
     },
-    editQuiz(quiz) {
-      // Implement quiz editing logic
+    async editQuiz(quiz) {
+      this.$router.push({ name: 'quiz-edit', params: { id: quiz._id }});
     },
-    previewQuiz(quiz) {
-      // Implement quiz preview logic
+    async previewQuiz(quiz) {
+      this.$router.push(`/quiz/preview/${quiz._id}`);
     },
-    deleteQuiz(quiz) {
-      // Implement quiz deletion logic
+    async deleteQuiz(quiz) {
+      if (confirm('Are you sure you want to delete this quiz?')) {
+        try {
+          this.isLoading = true;
+          this.error = null;
+          await api.delete(`/quizzes/${quiz._id}`);
+          this.$emit('update:quizzes', this.quizzes.filter(q => q._id !== quiz._id));
+        } catch (error) {
+          this.error = 'Failed to delete quiz. Please try again.';
+          console.error('Error deleting quiz:', error);
+        } finally {
+          this.isLoading = false;
+        }
+      }
+    },
+    getStatusIcon(status) {
+      const icons = {
+        'active': 'fa-check-circle',
+        'draft': 'fa-pencil-alt',
+        'archived': 'fa-archive'
+      };
+      return icons[status] || 'fa-circle';
+    },
+    getPerformanceClass(score) {
+      if (score >= 80) return 'performance-excellent';
+      if (score >= 60) return 'performance-good';
+      if (score >= 40) return 'performance-average';
+      return 'performance-needs-improvement';
     }
   }
 }
 </script>
 
 <style scoped>
+/* Enhanced Base Styles */
 .quiz-management {
-  background: #fff;
-  border-radius: 16px;
-  padding: 28px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
 }
 
+/* Enhanced Header Styles */
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 28px;
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 2px solid #f1f5f9;
+}
+
+.header-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .section-header h2 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   color: #1e293b;
-  font-size: 1.75rem;
+  font-size: 2rem;
   font-weight: 700;
   margin: 0;
-  background: linear-gradient(120deg, #4f46e5, #7c3aed);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
 
-.create-quiz-btn {
-  background: linear-gradient(120deg, #4f46e5, #7c3aed);
+.section-header h2 i {
+  color: #4f46e5;
+  font-size: 1.8rem;
+}
+
+.subtitle {
+  color: #64748b;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+/* Enhanced Button Styles */
+.primary-btn {
+  position: relative;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
   color: white;
-  padding: 12px 24px;
+  padding: 14px 28px;
   border: none;
   border-radius: 12px;
   cursor: pointer;
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  overflow: hidden;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
 }
 
-.create-quiz-btn:hover {
+.primary-btn .btn-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.primary-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.3);
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
 }
 
+.primary-btn:hover .btn-background {
+  opacity: 1;
+}
+
+.primary-btn i, .primary-btn span {
+  position: relative;
+  z-index: 1;
+}
+
+/* Enhanced Search and Filter Styles */
 .filters-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 28px;
-  gap: 20px;
   background: #f8fafc;
-  padding: 16px;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  padding: 20px;
+  border-radius: 16px;
+  margin-bottom: 32px;
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  border: 2px solid #e2e8f0;
 }
 
 .search-box {
-  position: relative;
   flex: 1;
+  position: relative;
 }
 
-.search-box input {
+.search-input {
   width: 100%;
-  padding: 12px 44px 12px 20px;
+  padding: 14px 48px;
   border: 2px solid #e2e8f0;
   border-radius: 12px;
   font-size: 1rem;
-  background: #fff;
+  background: #ffffff;
   transition: all 0.3s ease;
-}
-
-.search-box input:focus {
-  outline: none;
-  border-color: #4f46e5;
-  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
 }
 
 .search-box i {
   position: absolute;
-  right: 16px;
+  left: 16px;
   top: 50%;
   transform: translateY(-50%);
   color: #64748b;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
 }
 
-.filter-group {
-  display: flex;
-  gap: 16px;
+.select-wrapper {
+  position: relative;
+  min-width: 200px;
+}
+
+.select-wrapper i {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748b;
+  z-index: 1;
 }
 
 .filter-select {
-  padding: 12px 20px;
+  width: 100%;
+  padding: 14px 48px;
   border: 2px solid #e2e8f0;
   border-radius: 12px;
   font-size: 1rem;
   color: #1e293b;
-  background: #fff;
+  background: #ffffff;
   cursor: pointer;
+  appearance: none;
   transition: all 0.3s ease;
-  min-width: 160px;
 }
 
-.filter-select:focus {
-  outline: none;
-  border-color: #4f46e5;
-  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
-}
-
-.quizzes-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  gap: 24px;
-}
-
+/* Enhanced Quiz Card Styles */
 .quiz-card {
-  background: #fff;
-  border-radius: 16px;
+  background: #ffffff;
+  border-radius: 20px;
   padding: 24px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
-  border: 1px solid #e2e8f0;
+  border: 2px solid #e2e8f0;
   transition: all 0.3s ease;
 }
 
 .quiz-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
+  border-color: #4f46e5;
 }
 
 .quiz-header {
@@ -378,83 +545,61 @@ export default {
 }
 
 .status-badge {
-  padding: 6px 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
   border-radius: 30px;
   font-size: 0.9rem;
   font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.status-badge::before {
-  content: '';
-  display: block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
+  text-transform: capitalize;
 }
 
 .status-badge.active {
-  background: rgba(34, 197, 94, 0.1);
+  background: #dcfce7;
   color: #16a34a;
 }
 
-.status-badge.active::before {
-  background: #16a34a;
-}
-
 .status-badge.draft {
-  background: rgba(234, 179, 8, 0.1);
+  background: #fef9c3;
   color: #ca8a04;
 }
 
-.status-badge.draft::before {
-  background: #ca8a04;
-}
-
 .status-badge.archived {
-  background: rgba(100, 116, 139, 0.1);
+  background: #e2e8f0;
   color: #64748b;
 }
 
-.status-badge.archived::before {
-  background: #64748b;
-}
-
+/* Enhanced Stats Styles */
 .quiz-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-bottom: 24px;
-  padding: 16px;
+  gap: 20px;
+  padding: 20px;
   background: #f8fafc;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  margin: 24px 0;
 }
 
-.stat-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.stat-item i {
-  font-size: 1.2rem;
-  color: #4f46e5;
-  width: 36px;
-  height: 36px;
+.stat-icon {
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: rgba(79, 70, 229, 0.1);
-  border-radius: 10px;
+  border-radius: 12px;
   transition: all 0.3s ease;
 }
 
-.quiz-card:hover .stat-item i {
+.stat-icon i {
+  font-size: 1.4rem;
+  color: #4f46e5;
+}
+
+.quiz-card:hover .stat-icon {
+  transform: scale(1.1);
   background: rgba(79, 70, 229, 0.15);
-  transform: scale(1.05);
 }
 
 .stat-info {
@@ -475,77 +620,49 @@ export default {
   font-weight: 500;
 }
 
-.quiz-performance {
-  margin-bottom: 20px;
-}
-
-.performance-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-.performance-header h4 {
-  margin: 0;
-  font-size: 1rem;
-  color: #1e293b;
-  font-weight: 600;
-}
-
-.average-score {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #4f46e5;
-}
-
+/* Enhanced Performance Bar Styles */
 .performance-bar {
-  height: 8px;
+  height: 10px;
   background: #e2e8f0;
-  border-radius: 4px;
+  border-radius: 5px;
   overflow: hidden;
+  margin-top: 12px;
 }
 
 .progress-bar {
   height: 100%;
-  background: linear-gradient(120deg, #4f46e5, #7c3aed);
-  border-radius: 4px;
-  transition: width 0.6s ease;
+  border-radius: 5px;
+  transition: width 1s ease-in-out;
 }
 
-.quiz-details {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 20px;
-  padding: 12px;
-  background: #f8fafc;
-  border-radius: 8px;
+.performance-excellent {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
 }
 
-.detail-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #64748b;
-  font-size: 0.9rem;
+.performance-good {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
 }
 
-.detail-item i {
-  color: #4f46e5;
-  font-size: 1rem;
+.performance-average {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
 }
 
+.performance-needs-improvement {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+/* Enhanced Action Buttons */
 .quiz-actions {
   display: flex;
   gap: 12px;
+  margin-top: 24px;
 }
 
 .action-btn {
   flex: 1;
-  padding: 10px;
+  padding: 12px;
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
   cursor: pointer;
   font-size: 0.95rem;
   font-weight: 600;
@@ -556,8 +673,8 @@ export default {
   transition: all 0.3s ease;
 }
 
-.action-btn i {
-  font-size: 1.1rem;
+.action-btn:hover {
+  transform: translateY(-2px);
 }
 
 .action-btn.edit {
@@ -567,7 +684,6 @@ export default {
 
 .action-btn.edit:hover {
   background: rgba(79, 70, 229, 0.15);
-  transform: translateY(-2px);
 }
 
 .action-btn.preview {
@@ -577,7 +693,6 @@ export default {
 
 .action-btn.preview:hover {
   background: rgba(234, 179, 8, 0.15);
-  transform: translateY(-2px);
 }
 
 .action-btn.delete {
@@ -587,19 +702,78 @@ export default {
 
 .action-btn.delete:hover {
   background: rgba(239, 68, 68, 0.15);
-  transform: translateY(-2px);
 }
 
-/* Dark Mode Styles */
+/* Enhanced Loading State */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  text-align: center;
+}
+
+.loading-animation {
+  margin-bottom: 24px;
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #e2e8f0;
+  border-top: 4px solid #4f46e5;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Enhanced Empty State */
+.empty-state {
+  text-align: center;
+  padding: 48px;
+  background: #f8fafc;
+  border-radius: 20px;
+  border: 2px dashed #e2e8f0;
+}
+
+.empty-state-content {
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.empty-state i {
+  font-size: 3.5rem;
+  color: #4f46e5;
+  margin-bottom: 24px;
+}
+
+.empty-state h3 {
+  font-size: 1.5rem;
+  color: #1e293b;
+  margin-bottom: 12px;
+}
+
+.empty-state p {
+  color: #64748b;
+  margin-bottom: 24px;
+}
+
+/* Dark Mode Enhancements */
 @media (prefers-color-scheme: dark) {
   .quiz-management {
     background: #1e293b;
   }
 
+  .section-header {
+    border-bottom-color: #334155;
+  }
+
   .section-header h2 {
-    background: linear-gradient(120deg, #818cf8, #a78bfa);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: #f1f5f9;
+  }
+
+  .subtitle {
+    color: #94a3b8;
   }
 
   .filters-bar {
@@ -607,7 +781,7 @@ export default {
     border-color: #334155;
   }
 
-  .search-box input,
+  .search-input,
   .filter-select {
     background: #1e293b;
     border-color: #334155;
@@ -619,99 +793,62 @@ export default {
     border-color: #334155;
   }
 
-  .quiz-title h3 {
-    color: #e2e8f0;
+  .quiz-stats {
+    background: #0f172a;
   }
 
-  .quiz-subject {
-    color: #94a3b8;
+  .stat-icon {
+    background: rgba(129, 140, 248, 0.1);
   }
 
-  .quiz-stats,
-  .quiz-details {
+  .stat-icon i {
+    color: #818cf8;
+  }
+
+  .empty-state {
     background: #0f172a;
     border-color: #334155;
   }
 
-  .stat-value {
-    color: #e2e8f0;
+  .empty-state h3 {
+    color: #f1f5f9;
   }
 
-  .stat-label,
-  .detail-item {
+  .empty-state p {
     color: #94a3b8;
-  }
-
-  .performance-header h4 {
-    color: #e2e8f0;
   }
 
   .performance-bar {
     background: #334155;
   }
-
-  .action-btn.edit {
-    background: rgba(129, 140, 248, 0.1);
-    color: #818cf8;
-  }
-
-  .action-btn.edit:hover {
-    background: rgba(129, 140, 248, 0.15);
-  }
-
-  .action-btn.preview {
-    background: rgba(250, 204, 21, 0.1);
-    color: #facc15;
-  }
-
-  .action-btn.preview:hover {
-    background: rgba(250, 204, 21, 0.15);
-  }
-
-  .action-btn.delete {
-    background: rgba(248, 113, 113, 0.1);
-    color: #f87171;
-  }
-
-  .action-btn.delete:hover {
-    background: rgba(248, 113, 113, 0.15);
-  }
 }
 
 /* Responsive Design */
 @media (max-width: 1024px) {
-  .quizzes-grid {
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  }
-}
-
-@media (max-width: 768px) {
-  .section-header {
-    flex-direction: column;
-    gap: 16px;
-    align-items: stretch;
-  }
-
-  .create-quiz-btn {
-    width: 100%;
-    justify-content: center;
-  }
-
   .filters-bar {
     flex-direction: column;
-    padding: 12px;
   }
 
   .filter-group {
     width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .quiz-management {
+    padding: 20px;
   }
 
-  .filter-select {
-    flex: 1;
-    min-width: 0;
+  .section-header {
+    flex-direction: column;
+    gap: 20px;
+    text-align: center;
   }
 
-  .quizzes-grid {
+  .filter-group {
     grid-template-columns: 1fr;
   }
 
@@ -727,5 +864,10 @@ export default {
     margin: 0;
     font-size: 1.2rem;
   }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style> 

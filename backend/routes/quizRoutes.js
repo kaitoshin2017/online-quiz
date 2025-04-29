@@ -89,4 +89,87 @@ router.get('/results/:quizId', auth, async (req, res) => {
   }
 });
 
+// Create a new quiz (Admin only)
+router.post('/create', auth, async (req, res) => {
+  try {
+    // Check if user is admin
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Only admins can create quizzes' });
+    }
+
+    const { title, description, duration, questions } = req.body;
+
+    // Validate required fields
+    if (!title || !questions || !Array.isArray(questions) || questions.length === 0) {
+      return res.status(400).json({ message: 'Title and questions are required' });
+    }
+
+    // Validate each question
+    for (const question of questions) {
+      if (!question.text || !question.options || !Array.isArray(question.options) || 
+          question.options.length < 2 || question.correctAnswer === undefined) {
+        return res.status(400).json({ message: 'Invalid question format' });
+      }
+    }
+
+    const quiz = new Quiz({
+      title,
+      description,
+      duration: duration || 30,
+      questions,
+      createdBy: req.user._id,
+      status: 'published'
+    });
+
+    await quiz.save();
+    res.status(201).json(quiz);
+  } catch (error) {
+    console.error('Error creating quiz:', error);
+    res.status(500).json({ message: 'Server error occurred' });
+  }
+});
+
+// Update a quiz (Admin only)
+router.put('/:id', auth, async (req, res) => {
+  try {
+    // Check if user is admin
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Only admins can update quizzes' });
+    }
+
+    const { title, description, duration, questions, status } = req.body;
+    
+    // Validate required fields
+    if (!title || !description || !duration || !questions || !Array.isArray(questions)) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    // Validate questions
+    for (const question of questions) {
+      if (!question.text || !question.options || !Array.isArray(question.options) || 
+          question.options.length < 2 || !question.correctAnswer || !question.points) {
+        return res.status(400).json({ message: 'Invalid question format' });
+      }
+    }
+
+    const quiz = await Quiz.findById(req.params.id);
+    if (!quiz) {
+      return res.status(404).json({ message: 'Quiz not found' });
+    }
+
+    // Update quiz fields
+    quiz.title = title;
+    quiz.description = description;
+    quiz.duration = duration;
+    quiz.questions = questions;
+    if (status) quiz.status = status;
+
+    await quiz.save();
+    res.json(quiz);
+  } catch (error) {
+    console.error('Error updating quiz:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 module.exports = router; 

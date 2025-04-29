@@ -8,6 +8,7 @@ import StudentView from '../views/StudentView.vue'
 import AdminPanel from '../views/AdminPanel.vue'
 import SignupView from '../views/SignupView.vue'
 import FAQView from '../views/FAQView.vue'
+import QuizEditor from '../components/QuizEditor.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -51,6 +52,11 @@ const router = createRouter({
       path: '/my-quizzes',
       name: 'my-quizzes',
       component: () => import('../views/MyQuizzesView.vue'),
+    },
+    {
+      path: '/quiz/edit/:id',
+      name: 'quiz-edit',
+      component: QuizEditor,
     },
     {
       path: '/take-quiz/:id',

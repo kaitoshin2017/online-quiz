@@ -83,65 +83,32 @@
 </template>
 
 <script>
+import api from '../services/api';
+
 export default {
   name: 'UserManagement',
+  props: {
+    users: {
+      type: Array,
+      default: () => []
+    }
+  },
   data() {
     return {
       searchQuery: '',
       roleFilter: 'all',
       statusFilter: 'all',
-      users: [
-        {
-          id: 1,
-          name: 'John Admin',
-          email: 'john@example.com',
-          avatar: 'https://via.placeholder.com/150',
-          role: 'Admin',
-          status: 'active',
-          joinDate: '2024-01-15',
-          lastLogin: '2024-03-20',
-          twoFactorEnabled: true
-        },
-        {
-          id: 2,
-          name: 'Sarah Teacher',
-          email: 'sarah@example.com',
-          avatar: 'https://via.placeholder.com/150',
-          role: 'Teacher',
-          status: 'active',
-          joinDate: '2024-02-01',
-          lastLogin: '2024-03-21',
-          twoFactorEnabled: false
-        },
-        {
-          id: 3,
-          name: 'Mike Student',
-          email: 'mike@example.com',
-          avatar: 'https://via.placeholder.com/150',
-          role: 'Student',
-          status: 'active',
-          joinDate: '2024-02-15',
-          lastLogin: '2024-03-19',
-          twoFactorEnabled: false
-        },
-        {
-          id: 4,
-          name: 'Emily Teacher',
-          email: 'emily@example.com',
-          avatar: 'https://via.placeholder.com/150',
-          role: 'Teacher',
-          status: 'inactive',
-          joinDate: '2024-01-20',
-          lastLogin: '2024-03-10',
-          twoFactorEnabled: true
-        }
-      ]
+      isLoading: false,
+      error: null,
+      showUserModal: false,
+      currentUser: null,
+      isEditing: false
     }
   },
   computed: {
     filteredUsers() {
       return this.users.filter(user => {
-        if (this.roleFilter !== 'all' && user.role.toLowerCase() !== this.roleFilter) {
+        if (this.roleFilter !== 'all' && user.role !== this.roleFilter) {
           return false;
         }
         if (this.statusFilter !== 'all' && user.status !== this.statusFilter) {
@@ -149,7 +116,8 @@ export default {
         }
         if (this.searchQuery) {
           const query = this.searchQuery.toLowerCase();
-          return user.name.toLowerCase().includes(query) ||
+          return user.firstName.toLowerCase().includes(query) || 
+                 user.lastName.toLowerCase().includes(query) ||
                  user.email.toLowerCase().includes(query);
         }
         return true;
@@ -158,16 +126,58 @@ export default {
   },
   methods: {
     addNewUser() {
-      // Implement add user logic
+      this.currentUser = {
+        firstName: '',
+        lastName: '',
+        email: '',
+        password: '',
+        role: 'student',
+        status: 'active'
+      };
+      this.isEditing = false;
+      this.showUserModal = true;
     },
-    viewUserDetails(user) {
-      // Implement view details logic
+    async saveUser() {
+      try {
+        this.isLoading = true;
+        if (this.isEditing) {
+          await api.put(`/users/${this.currentUser._id}`, this.currentUser);
+          this.$emit('update-user', this.currentUser);
+        } else {
+          const response = await api.post('/users', this.currentUser);
+          this.$emit('add-user', response.data);
+        }
+        this.showUserModal = false;
+      } catch (error) {
+        this.error = this.isEditing ? 'Failed to update user' : 'Failed to create user';
+        console.error('Error saving user:', error);
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    async deleteUser(user) {
+      if (confirm('Are you sure you want to delete this user?')) {
+        try {
+          this.isLoading = true;
+          await api.delete(`/users/${user._id}`);
+          this.$emit('delete-user', user._id);
+        } catch (error) {
+          this.error = 'Failed to delete user';
+          console.error('Error deleting user:', error);
+        } finally {
+          this.isLoading = false;
+        }
+      }
     },
     editUser(user) {
-      // Implement edit logic
+      this.currentUser = { ...user };
+      this.isEditing = true;
+      this.showUserModal = true;
     },
-    deleteUser(user) {
-      // Implement delete logic
+    viewUserDetails(user) {
+      this.currentUser = { ...user };
+      this.isEditing = false;
+      this.showUserModal = true;
     }
   }
 }
