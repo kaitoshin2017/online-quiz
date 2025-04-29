@@ -163,37 +163,118 @@ export default {
         isLoading.value = true;
         error.value = '';
 
+        // Get the auth token from the store
+        const token = authStore.token;
+        if (!token) {
+          error.value = 'You must be logged in to save a quiz';
+          return;
+        }
+
         // Format the quiz data according to API requirements
         const quizData = {
           title: quiz.value.title.trim(),
           description: quiz.value.description.trim(),
+          subject: quiz.value.subject,
           duration: parseInt(quiz.value.duration),
-          questions: quiz.value.questions.map(q => {
-            // Base question structure
-            const formattedQuestion = {
-              text: q.text.trim(),
-              points: parseInt(q.points),
-              options: q.type === 'multiple-choice' ? q.options.map(opt => opt.trim()) : ['True', 'False'],
-              correctAnswer: q.type === 'multiple-choice' ? parseInt(q.correctAnswer) : 
-                           q.type === 'true-false' ? (q.correctAnswer === 'true' ? 0 : 1) : 0
-            };
+          questions: quiz.value.questions.map((q, index) => {
+            // Log the raw question data for debugging
+            console.log(`Raw question ${index + 1}:`, q);
 
+            // Format the question based on its type
+            let formattedQuestion;
+            if (q.type === 'multiple-choice') {
+              formattedQuestion = {
+                text: q.text.trim(),
+                type: 'multiple-choice',
+                points: parseInt(q.points),
+                options: q.options.map(opt => opt.trim()),
+                correctAnswer: parseInt(q.correctAnswer)
+              };
+            } else if (q.type === 'true-false') {
+              formattedQuestion = {
+                text: q.text.trim(),
+                type: 'true-false',
+                points: parseInt(q.points),
+                options: ['True', 'False'],
+                correctAnswer: q.correctAnswer === 'true' ? 0 : 1
+              };
+            } else if (q.type === 'short-answer') {
+              formattedQuestion = {
+                text: q.text.trim(),
+                type: 'short-answer',
+                points: parseInt(q.points),
+                options: [],
+                correctAnswer: q.correctAnswer.trim()
+              };
+            }
+
+            // Log the formatted question for debugging
+            console.log(`Formatted question ${index + 1}:`, formattedQuestion);
             return formattedQuestion;
           })
         };
 
-        console.log('Sending quiz data:', quizData); // For debugging
+        // Log the complete quiz data being sent
+        console.log('Complete quiz data being sent:', JSON.stringify(quizData, null, 2));
+
+        // Set up the API request configuration
+        const config = {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        };
 
         if (isEditing.value) {
-          await api.put(`/quizzes/${route.params.id}`, quizData);
+          // Use the correct endpoint based on the route
+          const endpoint = route.path.includes('/teacher/') 
+            ? `/teacher/quizzes/${route.params.id}`
+            : `/quizzes/${route.params.id}`;
+          
+          console.log('Sending PUT request to:', endpoint);
+          const response = await api.put(endpoint, quizData, config);
+          console.log('Update response:', response.data);
         } else {
-          await api.post('/quizzes/create', quizData);
+          // Use the correct endpoint for creating quizzes
+          const endpoint = route.path.includes('/teacher/') 
+            ? '/teacher/quizzes'
+            : '/quizzes/create';
+          
+          console.log('Sending POST request to:', endpoint);
+          const response = await api.post(endpoint, quizData, config);
+          console.log('Create response:', response.data);
         }
 
-        router.push('/admin-panel?tab=quizzes');
+        // Show success message and redirect
+        const successMessage = isEditing.value ? 'Quiz updated successfully' : 'Quiz created successfully';
+        alert(successMessage);
+        router.push(route.path.includes('/teacher/') ? '/teacher-panel' : '/admin-panel?tab=quizzes');
       } catch (err) {
-        error.value = err.response?.data?.message || 'Failed to save quiz';
-        console.error('Quiz save error:', err.response?.data || err);
+        console.error('Quiz save error:', err);
+        if (err.response) {
+          // Log the detailed error response
+          console.error('Error response data:', err.response.data);
+          console.error('Error response status:', err.response.status);
+          console.error('Error response headers:', err.response.headers);
+
+          // Handle specific error messages from the server
+          if (err.response.status === 401) {
+            error.value = 'Your session has expired. Please log in again.';
+            router.push('/login');
+          } else if (err.response.status === 403) {
+            error.value = 'You do not have permission to update this quiz. Please make sure you are the creator of this quiz.';
+          } else if (err.response.status === 404) {
+            error.value = 'Quiz not found. It may have been deleted.';
+          } else if (err.response.status === 422) {
+            error.value = 'Invalid quiz data. Please check all fields and try again.';
+          } else {
+            error.value = err.response.data?.message || 'Failed to save quiz';
+          }
+        } else if (err.request) {
+          error.value = 'No response from server. Please check your connection.';
+        } else {
+          error.value = 'An error occurred while saving the quiz';
+        }
       } finally {
         isLoading.value = false;
       }

@@ -6,6 +6,7 @@ const Student = require('../models/Student');
 const Quiz = require('../models/Quiz');
 const Settings = require('../models/Settings');
 const auth = require('../middleware/auth');
+const reportService = require('../services/reportService');
 
 // Apply authentication middleware to all routes
 router.use(auth);
@@ -359,6 +360,32 @@ router.delete('/users/:id', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Server error occurred'
+    });
+  }
+});
+
+// Generate report
+router.get('/reports/generate', async (req, res) => {
+  try {
+    const { dateRange } = req.query;
+    
+    if (!dateRange || !['today', 'week', 'month', 'year'].includes(dateRange)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid date range. Must be one of: today, week, month, year'
+      });
+    }
+
+    const pdfBuffer = await reportService.generateReport(dateRange);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=report-${dateRange}-${new Date().toISOString().split('T')[0]}.pdf`);
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error('Error generating report:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to generate report'
     });
   }
 });

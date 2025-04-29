@@ -169,6 +169,27 @@ class AdminService {
     }
   }
 
+  // Generate report
+  async generateReport(dateRange) {
+    try {
+      const response = await this.api.get('/reports/generate', {
+        params: { dateRange },
+        responseType: 'blob' // Important for handling binary data
+      });
+
+      if (response.status === 200) {
+        return {
+          success: true,
+          data: response.data
+        };
+      } else {
+        throw new Error('Failed to generate report');
+      }
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
   // Handle errors
   handleError(error) {
     if (error.response) {
