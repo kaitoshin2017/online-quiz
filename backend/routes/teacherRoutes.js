@@ -168,7 +168,7 @@ router.get('/results', auth, async (req, res) => {
 // Get teacher profile
 router.get('/profile', auth, async (req, res) => {
   try {
-    const teacher = await User.findById(req.user._id).select('-password -tokens');
+    const teacher = await Teacher.findById(req.user._id).select('-password -tokens');
     if (!teacher) {
       return res.status(404).json({
         success: false,
@@ -178,7 +178,16 @@ router.get('/profile', auth, async (req, res) => {
 
     res.json({
       success: true,
-      data: teacher
+      teacher: {
+        firstName: teacher.firstName,
+        lastName: teacher.lastName,
+        email: teacher.email,
+        phone: teacher.phone,
+        bio: teacher.bio,
+        avatar: teacher.avatar,
+        role: teacher.role,
+        settings: teacher.settings
+      }
     });
   } catch (error) {
     console.error('Error fetching teacher profile:', error);

@@ -25,7 +25,15 @@ class TeacherService {
       const response = await axios.get(`${API_URL}/profile`, {
         headers: { Authorization: `Bearer ${this.token}` }
       });
-      return response.data;
+      
+      if (!response.data.success) {
+        throw new Error(response.data.message || 'Failed to fetch profile');
+      }
+
+      return {
+        success: true,
+        teacher: response.data.teacher
+      };
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Failed to fetch profile');
     }
