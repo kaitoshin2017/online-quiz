@@ -1,10 +1,92 @@
 <template>
   <div class="user-management">
     <div class="section-header">
-      <h2>User Management</h2>
-      <button class="add-user-btn" @click="addNewUser">
-        <i class="fas fa-user-plus"></i> Add New User
+      <div class="header-content">
+        <h2>
+          <i class="fas fa-users"></i>
+          User Management
+        </h2>
+        <p class="subtitle">Manage system users and their roles</p>
+      </div>
+      <button class="quick-add-btn" @click="showQuickAddForm = true" :disabled="isLoading">
+        <i class="fas fa-user-plus"></i>
+        <span>Quick Add User</span>
       </button>
+    </div>
+
+    <!-- Quick Add Form -->
+    <div v-if="showQuickAddForm" class="quick-add-form">
+      <form @submit.prevent="createUser" class="form-grid">
+        <div class="form-group">
+          <label>First Name</label>
+          <input 
+            v-model="newUser.firstName"
+            type="text"
+            placeholder="Enter first name"
+            required
+            ref="firstNameInput"
+          >
+        </div>
+        <div class="form-group">
+          <label>Last Name</label>
+          <input 
+            v-model="newUser.lastName"
+            type="text"
+            placeholder="Enter last name"
+            required
+          >
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input 
+            v-model="newUser.email"
+            type="email"
+            placeholder="Enter email address"
+            required
+          >
+        </div>
+        <div class="form-group">
+          <label>Role</label>
+          <select v-model="newUser.role" required>
+            <option value="">Select role</option>
+            <option value="student">Student</option>
+            <option value="teacher">Teacher</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <div class="password-input">
+            <input 
+              v-model="newUser.password"
+              :type="showPassword ? 'text' : 'password'"
+              placeholder="Enter password"
+              required
+            >
+            <button type="button" @click="showPassword = !showPassword" class="toggle-password">
+              <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+            </button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select v-model="newUser.status" required>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+            <option value="pending">Pending</option>
+          </select>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="cancel-btn" @click="cancelQuickAdd">
+            <i class="fas fa-times"></i>
+            Cancel
+          </button>
+          <button type="submit" class="submit-btn" :disabled="isSubmitting">
+            <i class="fas fa-save"></i>
+            {{ isSubmitting ? 'Creating...' : 'Create User' }}
+          </button>
+        </div>
+      </form>
     </div>
 
     <div class="filters-bar">
@@ -83,101 +165,121 @@
 </template>
 
 <script>
-import api from '../services/api';
+import { ref, onMounted, watch, nextTick, computed } from 'vue'
+import api from '../services/api'
 
 export default {
   name: 'UserManagement',
   props: {
     users: {
       type: Array,
-      default: () => []
+      required: true
     }
   },
-  data() {
-    return {
-      searchQuery: '',
-      roleFilter: 'all',
-      statusFilter: 'all',
-      isLoading: false,
-      error: null,
-      showUserModal: false,
-      currentUser: null,
-      isEditing: false
+  setup(props, { emit }) {
+    const showQuickAddForm = ref(false)
+    const showPassword = ref(false)
+    const isSubmitting = ref(false)
+    const isLoading = ref(false)
+    const firstNameInput = ref(null)
+    const searchQuery = ref('')
+    const roleFilter = ref('all')
+    const statusFilter = ref('all')
+
+    const newUser = ref({
+      firstName: '',
+      lastName: '',
+      email: '',
+      password: '',
+      role: '',
+      status: 'active'
+    })
+
+    // Computed property for filtered users
+    const filteredUsers = computed(() => {
+      return props.users.filter(user => {
+        // Safely construct the full name from firstName and lastName
+        const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim().toLowerCase()
+        const email = (user.email || '').toLowerCase()
+        const searchTerm = searchQuery.value.toLowerCase()
+        const role = (user.role || '').toLowerCase()
+        const status = (user.status || '').toLowerCase()
+
+        const matchesSearch = !searchTerm || 
+                            fullName.includes(searchTerm) || 
+                            email.includes(searchTerm)
+        const matchesRole = roleFilter.value === 'all' || role === roleFilter.value.toLowerCase()
+        const matchesStatus = statusFilter.value === 'all' || status === statusFilter.value.toLowerCase()
+        
+        return matchesSearch && matchesRole && matchesStatus
+      })
+    })
+
+    const createUser = async () => {
+      try {
+        isSubmitting.value = true
+        const response = await api.post('/users/create', newUser.value)
+        
+        if (response.data) {
+          // Add the new user to the list
+          emit('update:users', [...props.users, response.data])
+          
+          // Reset form
+          newUser.value = {
+            firstName: '',
+            lastName: '',
+            email: '',
+            password: '',
+            role: '',
+            status: 'active'
+          }
+          showQuickAddForm.value = false
+          
+          // Show success message
+          alert('User created successfully!')
+        }
+      } catch (error) {
+        console.error('Error creating user:', error)
+        alert(error.response?.data?.message || 'Failed to create user')
+      } finally {
+        isSubmitting.value = false
+      }
     }
-  },
-  computed: {
-    filteredUsers() {
-      return this.users.filter(user => {
-        if (this.roleFilter !== 'all' && user.role !== this.roleFilter) {
-          return false;
-        }
-        if (this.statusFilter !== 'all' && user.status !== this.statusFilter) {
-          return false;
-        }
-        if (this.searchQuery) {
-          const query = this.searchQuery.toLowerCase();
-          return user.firstName.toLowerCase().includes(query) || 
-                 user.lastName.toLowerCase().includes(query) ||
-                 user.email.toLowerCase().includes(query);
-        }
-        return true;
-      });
-    }
-  },
-  methods: {
-    addNewUser() {
-      this.currentUser = {
+
+    const cancelQuickAdd = () => {
+      showQuickAddForm.value = false
+      newUser.value = {
         firstName: '',
         lastName: '',
         email: '',
         password: '',
-        role: 'student',
+        role: '',
         status: 'active'
-      };
-      this.isEditing = false;
-      this.showUserModal = true;
-    },
-    async saveUser() {
-      try {
-        this.isLoading = true;
-        if (this.isEditing) {
-          await api.put(`/users/${this.currentUser._id}`, this.currentUser);
-          this.$emit('update-user', this.currentUser);
-        } else {
-          const response = await api.post('/users', this.currentUser);
-          this.$emit('add-user', response.data);
-        }
-        this.showUserModal = false;
-      } catch (error) {
-        this.error = this.isEditing ? 'Failed to update user' : 'Failed to create user';
-        console.error('Error saving user:', error);
-      } finally {
-        this.isLoading = false;
       }
-    },
-    async deleteUser(user) {
-      if (confirm('Are you sure you want to delete this user?')) {
-        try {
-          this.isLoading = true;
-          await api.delete(`/users/${user._id}`);
-          this.$emit('delete-user', user._id);
-        } catch (error) {
-          this.error = 'Failed to delete user';
-          console.error('Error deleting user:', error);
-        } finally {
-          this.isLoading = false;
-        }
+    }
+
+    // Focus first name input when form opens
+    watch(showQuickAddForm, (newVal) => {
+      if (newVal && firstNameInput.value) {
+        nextTick(() => {
+          firstNameInput.value.focus()
+        })
       }
-    },
-    editUser(user) {
-      this.currentUser = { ...user };
-      this.isEditing = true;
-      this.showUserModal = true;
-    },
-    viewUserDetails(user) {
-      this.currentUser = { ...user };
-      this.isEditing = false;
-      this.showUserModal = true;
+    })
+
+    return {
+      showQuickAddForm,
+      showPassword,
+      isSubmitting,
+      isLoading,
+      newUser,
+      createUser,
+      cancelQuickAdd,
+      firstNameInput,
+      searchQuery,
+      roleFilter,
+      statusFilter,
+      filteredUsers
     }
   }
 }
@@ -185,48 +287,255 @@ export default {
 
 <style scoped>
 .user-management {
-  background: #fff;
-  border-radius: 16px;
-  padding: 28px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
 }
 
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 28px;
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 2px solid #f1f5f9;
+}
+
+.header-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .section-header h2 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   color: #1e293b;
-  font-size: 1.75rem;
+  font-size: 2rem;
   font-weight: 700;
   margin: 0;
-  background: linear-gradient(120deg, #4f46e5, #7c3aed);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
 
-.add-user-btn {
-  background: linear-gradient(120deg, #4f46e5, #7c3aed);
+.section-header h2 i {
+  color: #4f46e5;
+}
+
+.subtitle {
+  color: #64748b;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.quick-add-btn {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
   color: white;
-  padding: 12px 24px;
+  padding: 14px 28px;
   border: none;
   border-radius: 12px;
   cursor: pointer;
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
 }
 
-.add-user-btn:hover {
+.quick-add-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.3);
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
+}
+
+.quick-add-form {
+  background: #f8fafc;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 32px;
+  border: 2px solid #e2e8f0;
+  animation: slideDown 0.3s ease-out;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.95rem;
+}
+
+.form-group input,
+.form-group select {
+  padding: 12px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.password-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-input input {
+  padding-right: 48px;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 16px;
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 0;
+  font-size: 1.1rem;
+  transition: color 0.3s ease;
+}
+
+.toggle-password:hover {
+  color: #4f46e5;
+}
+
+.form-actions {
+  grid-column: span 2;
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.cancel-btn,
+.submit-btn {
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.cancel-btn {
+  background: #f1f5f9;
+  color: #64748b;
+  border: none;
+}
+
+.cancel-btn:hover {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.submit-btn {
+  background: #4f46e5;
+  color: white;
+  border: none;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background: #4338ca;
+  transform: translateY(-2px);
+}
+
+.submit-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+  .user-management {
+    background: #1e293b;
+  }
+
+  .section-header {
+    border-bottom-color: #334155;
+  }
+
+  .section-header h2 {
+    color: #f1f5f9;
+  }
+
+  .subtitle {
+    color: #94a3b8;
+  }
+
+  .quick-add-form {
+    background: #0f172a;
+    border-color: #334155;
+  }
+
+  .form-group label {
+    color: #e2e8f0;
+  }
+
+  .form-group input,
+  .form-group select {
+    background: #1e293b;
+    border-color: #334155;
+    color: #e2e8f0;
+  }
+
+  .form-group input:focus,
+  .form-group select:focus {
+    border-color: #818cf8;
+  }
+
+  .cancel-btn {
+    background: #334155;
+    color: #94a3b8;
+  }
+
+  .cancel-btn:hover {
+    background: #475569;
+    color: #e2e8f0;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-actions {
+    grid-column: 1;
+  }
 }
 
 .filters-bar {

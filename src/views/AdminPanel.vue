@@ -191,7 +191,7 @@ export default {
           window.location.href = '/login';
           return;
         }
-
+        
         // Fetch quizzes first
         console.log('Fetching initial quizzes...');
         const quizzesResponse = await adminService.getQuizzes();
