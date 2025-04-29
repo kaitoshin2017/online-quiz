@@ -37,6 +37,15 @@
           >
         </div>
         <div class="form-group">
+          <label>Username</label>
+          <input 
+            v-model="newUser.username"
+            type="text"
+            placeholder="Enter username"
+            required
+          >
+        </div>
+        <div class="form-group">
           <label>Email</label>
           <input 
             v-model="newUser.email"
@@ -189,6 +198,7 @@ export default {
     const newUser = ref({
       firstName: '',
       lastName: '',
+      username: '',
       email: '',
       password: '',
       role: '',
@@ -217,17 +227,53 @@ export default {
 
     const createUser = async () => {
       try {
+        // Validate required fields
+        const requiredFields = ['firstName', 'lastName', 'username', 'email', 'password', 'role']
+        const missingFields = requiredFields.filter(field => !newUser.value[field])
+        
+        if (missingFields.length > 0) {
+          throw new Error(`Please fill in all required fields: ${missingFields.join(', ')}`)
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        if (!emailRegex.test(newUser.value.email)) {
+          throw new Error('Please enter a valid email address')
+        }
+
+        // Validate username format (alphanumeric and underscores only)
+        const usernameRegex = /^[a-zA-Z0-9_]+$/
+        if (!usernameRegex.test(newUser.value.username)) {
+          throw new Error('Username can only contain letters, numbers, and underscores')
+        }
+
         isSubmitting.value = true
-        const response = await api.post('/users/create', newUser.value)
+        
+        // Create FormData object
+        const formData = new FormData()
+        formData.append('firstName', newUser.value.firstName)
+        formData.append('lastName', newUser.value.lastName)
+        formData.append('username', newUser.value.username)
+        formData.append('email', newUser.value.email.toLowerCase())
+        formData.append('password', newUser.value.password)
+        formData.append('role', newUser.value.role)
+        formData.append('status', newUser.value.status)
+        
+        const response = await api.post('/auth/signup', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        })
         
         if (response.data) {
           // Add the new user to the list
-          emit('update:users', [...props.users, response.data])
+          emit('update:users', [...props.users, response.data.user])
           
           // Reset form
           newUser.value = {
             firstName: '',
             lastName: '',
+            username: '',
             email: '',
             password: '',
             role: '',
@@ -240,7 +286,8 @@ export default {
         }
       } catch (error) {
         console.error('Error creating user:', error)
-        alert(error.response?.data?.message || 'Failed to create user')
+        const errorMessage = error.response?.data?.message || error.message || 'Failed to create user'
+        alert(errorMessage)
       } finally {
         isSubmitting.value = false
       }
@@ -251,6 +298,7 @@ export default {
       newUser.value = {
         firstName: '',
         lastName: '',
+        username: '',
         email: '',
         password: '',
         role: '',
@@ -996,3 +1044,4 @@ export default {
   }
 }
 </style> 
+

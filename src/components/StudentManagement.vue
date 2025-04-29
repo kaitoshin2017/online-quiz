@@ -1,10 +1,102 @@
 <template>
   <div class="student-management">
     <div class="section-header">
-      <h2>Student Management</h2>
-      <button class="add-student-btn" @click="addNewStudent">
-        <i class="fas fa-user-plus"></i> Add New Student
+      <div class="header-content">
+        <h2>
+          <i class="fas fa-user-graduate"></i>
+          Student Management
+        </h2>
+        <p class="subtitle">Manage and monitor student progress</p>
+      </div>
+      <button class="quick-add-btn" @click="showQuickAddForm = true" :disabled="isLoading">
+        <i class="fas fa-user-plus"></i>
+        <span>Add New Student</span>
       </button>
+    </div>
+
+    <!-- Quick Add Form -->
+    <div v-if="showQuickAddForm" class="quick-add-form">
+      <form @submit.prevent="createStudent" class="form-grid">
+        <div class="form-group">
+          <label>First Name</label>
+          <input 
+            v-model="newStudent.firstName"
+            type="text"
+            placeholder="Enter first name"
+            required
+            ref="firstNameInput"
+          >
+        </div>
+        <div class="form-group">
+          <label>Last Name</label>
+          <input 
+            v-model="newStudent.lastName"
+            type="text"
+            placeholder="Enter last name"
+            required
+          >
+        </div>
+        <div class="form-group">
+          <label>Username</label>
+          <input 
+            v-model="newStudent.username"
+            type="text"
+            placeholder="Enter username"
+            required
+          >
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input 
+            v-model="newStudent.email"
+            type="email"
+            placeholder="Enter email address"
+            required
+          >
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <div class="password-input">
+            <input 
+              v-model="newStudent.password"
+              :type="showPassword ? 'text' : 'password'"
+              placeholder="Enter password"
+              required
+            >
+            <button type="button" @click="showPassword = !showPassword" class="toggle-password">
+              <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+            </button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Grade Level</label>
+          <select v-model="newStudent.gradeLevel" required>
+            <option value="">Select grade level</option>
+            <option value="9">Grade 9</option>
+            <option value="10">Grade 10</option>
+            <option value="11">Grade 11</option>
+            <option value="12">Grade 12</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select v-model="newStudent.status" required>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+            <option value="pending">Pending</option>
+          </select>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="cancel-btn" @click="cancelQuickAdd">
+            <i class="fas fa-times"></i>
+            Cancel
+          </button>
+          <button type="submit" class="submit-btn" :disabled="isSubmitting">
+            <i class="fas fa-save"></i>
+            {{ isSubmitting ? 'Creating...' : 'Create Student' }}
+          </button>
+        </div>
+      </form>
     </div>
 
     <div class="filters-bar">
@@ -13,11 +105,12 @@
         <input type="text" v-model="searchQuery" placeholder="Search students...">
       </div>
       <div class="filter-group">
-        <select v-model="gradeFilter" class="filter-select">
+        <select v-model="gradeLevelFilter" class="filter-select">
           <option value="all">All Grades</option>
-          <option v-for="grade in grades" :key="grade" :value="grade">
-            Grade {{ grade }}
-          </option>
+          <option value="9">Grade 9</option>
+          <option value="10">Grade 10</option>
+          <option value="11">Grade 11</option>
+          <option value="12">Grade 12</option>
         </select>
         <select v-model="statusFilter" class="filter-select">
           <option value="all">All Status</option>
@@ -32,32 +125,33 @@
         <div class="student-header">
           <img :src="student.avatar" :alt="student.name" class="student-avatar">
           <div class="student-info">
-            <h3>{{ student.name }}</h3>
-            <p>Grade {{ student.grade }}</p>
+            <h3>{{ student.firstName }} {{ student.lastName }}</h3>
+            <p>{{ student.email }}</p>
+            <span class="grade-badge">Grade {{ student.gradeLevel }}</span>
             <span :class="['status-badge', student.status]">{{ student.status }}</span>
           </div>
         </div>
 
         <div class="student-stats">
           <div class="stat-item">
-            <i class="fas fa-book"></i>
+            <i class="fas fa-clipboard-check"></i>
             <div class="stat-info">
-              <span class="stat-value">{{ student.courses }}</span>
-              <span class="stat-label">Courses</span>
+              <span class="stat-value">{{ student.completedQuizzes || 0 }}</span>
+              <span class="stat-label">Quizzes</span>
             </div>
           </div>
           <div class="stat-item">
-            <i class="fas fa-chart-line"></i>
+            <i class="fas fa-trophy"></i>
             <div class="stat-info">
-              <span class="stat-value">{{ student.avgScore }}%</span>
+              <span class="stat-value">{{ student.averageScore || '0%' }}</span>
               <span class="stat-label">Avg. Score</span>
             </div>
           </div>
           <div class="stat-item">
             <i class="fas fa-clock"></i>
             <div class="stat-info">
-              <span class="stat-value">{{ student.attendance }}%</span>
-              <span class="stat-label">Attendance</span>
+              <span class="stat-value">{{ student.lastActive || 'Never' }}</span>
+              <span class="stat-label">Last Active</span>
             </div>
           </div>
         </div>
@@ -82,58 +176,184 @@
 </template>
 
 <script>
+import { ref, computed, watch, nextTick } from 'vue'
+import api from '../services/api'
+
 export default {
   name: 'StudentManagement',
-  data() {
+  props: {
+    students: {
+      type: Array,
+      required: true
+    }
+  },
+  setup(props, { emit }) {
+    const showQuickAddForm = ref(false)
+    const showPassword = ref(false)
+    const isSubmitting = ref(false)
+    const isLoading = ref(false)
+    const firstNameInput = ref(null)
+    const searchQuery = ref('')
+    const gradeLevelFilter = ref('all')
+    const statusFilter = ref('all')
+
+    const newStudent = ref({
+      firstName: '',
+      lastName: '',
+      username: '',
+      email: '',
+      password: '',
+      gradeLevel: '',
+      status: 'active'
+    })
+
+    // Computed property for filtered students
+    const filteredStudents = computed(() => {
+      return props.students.filter(student => {
+        const fullName = `${student.firstName || ''} ${student.lastName || ''}`.trim().toLowerCase()
+        const email = (student.email || '').toLowerCase()
+        const searchTerm = searchQuery.value.toLowerCase()
+
+        const matchesSearch = !searchTerm || 
+                            fullName.includes(searchTerm) || 
+                            email.includes(searchTerm)
+        const matchesGrade = gradeLevelFilter.value === 'all' || student.gradeLevel === gradeLevelFilter.value
+        const matchesStatus = statusFilter.value === 'all' || student.status === statusFilter.value
+        
+        return matchesSearch && matchesGrade && matchesStatus
+      })
+    })
+
+    const createStudent = async () => {
+      try {
+        // Validate required fields
+        const requiredFields = ['firstName', 'lastName', 'username', 'email', 'password', 'gradeLevel']
+        const missingFields = requiredFields.filter(field => !newStudent.value[field])
+        
+        if (missingFields.length > 0) {
+          throw new Error(`Please fill in all required fields: ${missingFields.join(', ')}`)
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        if (!emailRegex.test(newStudent.value.email)) {
+          throw new Error('Please enter a valid email address')
+        }
+
+        // Validate username format
+        const usernameRegex = /^[a-zA-Z0-9_]+$/
+        if (!usernameRegex.test(newStudent.value.username)) {
+          throw new Error('Username can only contain letters, numbers, and underscores')
+        }
+
+        isSubmitting.value = true
+        
+        // Create FormData object
+        const formData = new FormData()
+        formData.append('firstName', newStudent.value.firstName)
+        formData.append('lastName', newStudent.value.lastName)
+        formData.append('username', newStudent.value.username)
+        formData.append('email', newStudent.value.email.toLowerCase())
+        formData.append('password', newStudent.value.password)
+        formData.append('gradeLevel', newStudent.value.gradeLevel)
+        formData.append('status', newStudent.value.status)
+        formData.append('role', 'student')
+        
+        const response = await api.post('/auth/signup', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        })
+        
+        if (response.data) {
+          // Add the new student to the list
+          emit('update:students', [...props.students, response.data.user])
+          
+          // Reset form
+          newStudent.value = {
+            firstName: '',
+            lastName: '',
+            username: '',
+            email: '',
+            password: '',
+            gradeLevel: '',
+            status: 'active'
+          }
+          showQuickAddForm.value = false
+          
+          // Show success message
+          alert('Student created successfully!')
+        }
+      } catch (error) {
+        console.error('Error creating student:', error)
+        const errorMessage = error.response?.data?.message || error.message || 'Failed to create student'
+        alert(errorMessage)
+      } finally {
+        isSubmitting.value = false
+      }
+    }
+
+    const cancelQuickAdd = () => {
+      showQuickAddForm.value = false
+      newStudent.value = {
+        firstName: '',
+        lastName: '',
+        username: '',
+        email: '',
+        password: '',
+        gradeLevel: '',
+        status: 'active'
+      }
+    }
+
+    // Focus first name input when form opens
+    watch(showQuickAddForm, (newVal) => {
+      if (newVal && firstNameInput.value) {
+        nextTick(() => {
+          firstNameInput.value.focus()
+        })
+      }
+    })
+
+    const viewStudentDetails = (student) => {
+      // Implement view details functionality
+      console.log('View student details:', student)
+    }
+
+    const editStudent = (student) => {
+      // Implement edit functionality
+      console.log('Edit student:', student)
+    }
+
+    const deleteStudent = async (student) => {
+      if (confirm('Are you sure you want to delete this student?')) {
+        try {
+          await api.delete(`/students/${student.id}`)
+          emit('update:students', props.students.filter(s => s.id !== student.id))
+          alert('Student deleted successfully!')
+        } catch (error) {
+          console.error('Error deleting student:', error)
+          alert(error.response?.data?.message || 'Failed to delete student')
+        }
+      }
+    }
+
     return {
-      searchQuery: '',
-      gradeFilter: 'all',
-      statusFilter: 'all',
-      grades: [9, 10, 11, 12],
-      students: [
-        {
-          id: 1,
-          name: 'Alice Johnson',
-          grade: 10,
-          avatar: 'https://via.placeholder.com/150',
-          status: 'active',
-          courses: 6,
-          avgScore: 92,
-          attendance: 95
-        },
-        // Add more sample data as needed
-      ]
-    }
-  },
-  computed: {
-    filteredStudents() {
-      return this.students.filter(student => {
-        if (this.gradeFilter !== 'all' && student.grade !== parseInt(this.gradeFilter)) {
-          return false;
-        }
-        if (this.statusFilter !== 'all' && student.status !== this.statusFilter) {
-          return false;
-        }
-        if (this.searchQuery) {
-          const query = this.searchQuery.toLowerCase();
-          return student.name.toLowerCase().includes(query);
-        }
-        return true;
-      });
-    }
-  },
-  methods: {
-    addNewStudent() {
-      // Implement add student logic
-    },
-    viewStudentDetails(student) {
-      // Implement view details logic
-    },
-    editStudent(student) {
-      // Implement edit logic
-    },
-    deleteStudent(student) {
-      // Implement delete logic
+      showQuickAddForm,
+      showPassword,
+      isSubmitting,
+      isLoading,
+      newStudent,
+      createStudent,
+      cancelQuickAdd,
+      firstNameInput,
+      searchQuery,
+      gradeLevelFilter,
+      statusFilter,
+      filteredStudents,
+      viewStudentDetails,
+      editStudent,
+      deleteStudent
     }
   }
 }
@@ -141,60 +361,213 @@ export default {
 
 <style scoped>
 .student-management {
-  background: #fff;
-  border-radius: 16px;
-  padding: 28px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 32px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  min-height: calc(100vh - 100px);
+  transition: all 0.3s ease;
 }
 
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 28px;
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 2px solid #f1f5f9;
 }
 
-.section-header h2 {
-  color: #1e293b;
-  font-size: 1.75rem;
-  font-weight: 700;
+.header-content h2 {
+  font-size: 2rem;
+  font-weight: 800;
   margin: 0;
-  background: linear-gradient(120deg, #4f46e5, #7c3aed);
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-content h2 i {
+  font-size: 1.8rem;
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-.add-student-btn {
-  background: linear-gradient(120deg, #4f46e5, #7c3aed);
-  color: white;
-  padding: 12px 24px;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  font-size: 1rem;
+.subtitle {
+  color: #64748b;
+  font-size: 1.1rem;
   font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+  margin: 8px 0 0 0;
+  opacity: 0.9;
 }
 
-.add-student-btn:hover {
+.quick-add-btn {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  color: white;
+  padding: 14px 28px;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  font-size: 1.05rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(79, 70, 229, 0.25);
+}
+
+.quick-add-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.3);
+  box-shadow: 0 8px 24px rgba(79, 70, 229, 0.35);
+}
+
+.quick-add-btn:active {
+  transform: translateY(0);
+}
+
+.quick-add-form {
+  background: #fff;
+  border-radius: 20px;
+  padding: 32px;
+  margin-bottom: 32px;
+  border: 2px solid #f1f5f9;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.95rem;
+}
+
+.form-group input,
+.form-group select {
+  padding: 14px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: #fff;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+}
+
+.password-input {
+  position: relative;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.toggle-password:hover {
+  color: #4f46e5;
+  background: rgba(79, 70, 229, 0.1);
+}
+
+.form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 16px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.cancel-btn,
+.submit-btn {
+  padding: 14px 28px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.cancel-btn {
+  background: #f1f5f9;
+  color: #64748b;
+  border: none;
+}
+
+.cancel-btn:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.submit-btn {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  color: white;
+  border: none;
+  box-shadow: 0 4px 16px rgba(79, 70, 229, 0.25);
+}
+
+.submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(79, 70, 229, 0.35);
+}
+
+.submit-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .filters-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 28px;
-  gap: 20px;
+  margin-bottom: 32px;
+  gap: 24px;
   background: #f8fafc;
-  padding: 16px;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  padding: 20px;
+  border-radius: 16px;
+  border: 2px solid #f1f5f9;
 }
 
 .search-box {
@@ -204,7 +577,7 @@ export default {
 
 .search-box input {
   width: 100%;
-  padding: 12px 44px 12px 20px;
+  padding: 14px 48px 14px 20px;
   border: 2px solid #e2e8f0;
   border-radius: 12px;
   font-size: 1rem;
@@ -224,7 +597,7 @@ export default {
   top: 50%;
   transform: translateY(-50%);
   color: #64748b;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
 }
 
 .filter-group {
@@ -233,7 +606,7 @@ export default {
 }
 
 .filter-select {
-  padding: 12px 20px;
+  padding: 14px 20px;
   border: 2px solid #e2e8f0;
   border-radius: 12px;
   font-size: 1rem;
@@ -241,7 +614,7 @@ export default {
   background: #fff;
   cursor: pointer;
   transition: all 0.3s ease;
-  min-width: 160px;
+  min-width: 180px;
 }
 
 .filter-select:focus {
@@ -252,80 +625,105 @@ export default {
 
 .students-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
   gap: 24px;
 }
 
 .student-card {
   background: #fff;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
-  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  border: 2px solid #f1f5f9;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.student-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  opacity: 0;
   transition: all 0.3s ease;
 }
 
 .student-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+}
+
+.student-card:hover::before {
+  opacity: 1;
 }
 
 .student-header {
   display: flex;
-  gap: 20px;
-  margin-bottom: 24px;
+  gap: 24px;
+  margin-bottom: 28px;
   align-items: center;
 }
 
 .student-avatar {
-  width: 90px;
-  height: 90px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
   object-fit: cover;
-  border: 4px solid #4f46e5;
+  border: 3px solid #fff;
+  box-shadow: 0 4px 16px rgba(79, 70, 229, 0.25);
   padding: 3px;
-  background: linear-gradient(120deg, #4f46e5, #7c3aed);
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
   transition: all 0.3s ease;
 }
 
 .student-card:hover .student-avatar {
   transform: scale(1.05);
-}
-
-.student-info {
-  flex: 1;
+  box-shadow: 0 8px 24px rgba(79, 70, 229, 0.35);
 }
 
 .student-info h3 {
-  margin: 0 0 6px 0;
+  margin: 0 0 8px 0;
   color: #1e293b;
-  font-size: 1.25rem;
+  font-size: 1.4rem;
   font-weight: 700;
+  line-height: 1.3;
 }
 
 .student-info p {
-  margin: 0 0 10px 0;
+  margin: 0 0 12px 0;
   color: #64748b;
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 500;
 }
 
+.grade-badge,
 .status-badge {
-  padding: 6px 16px;
+  padding: 8px 16px;
   border-radius: 30px;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 600;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  margin-right: 10px;
 }
 
-.status-badge::before {
+.grade-badge {
+  background: rgba(79, 70, 229, 0.1);
+  color: #4f46e5;
+}
+
+.grade-badge::before {
   content: '';
   display: block;
   width: 8px;
   height: 8px;
   border-radius: 50%;
+  background: #4f46e5;
 }
 
 .status-badge.active {
@@ -349,30 +747,30 @@ export default {
 .student-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-bottom: 24px;
-  padding: 16px;
+  gap: 20px;
+  margin-bottom: 28px;
+  padding: 20px;
   background: #f8fafc;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  border: 2px solid #f1f5f9;
 }
 
 .stat-item {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
 }
 
 .stat-item i {
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   color: #4f46e5;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: rgba(79, 70, 229, 0.1);
-  border-radius: 10px;
+  border-radius: 12px;
   transition: all 0.3s ease;
 }
 
@@ -384,17 +782,17 @@ export default {
 .stat-info {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 }
 
 .stat-value {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   font-weight: 700;
   color: #1e293b;
 }
 
 .stat-label {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: #64748b;
   font-weight: 500;
 }
@@ -406,11 +804,11 @@ export default {
 
 .action-btn {
   flex: 1;
-  padding: 10px;
+  padding: 12px;
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
   cursor: pointer;
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -459,22 +857,49 @@ export default {
     background: #1e293b;
   }
 
-  .section-header h2 {
-    background: linear-gradient(120deg, #818cf8, #a78bfa);
+  .section-header {
+    border-bottom-color: #334155;
+  }
+
+  .header-content h2 {
+    background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
     -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
   }
 
-  .filters-bar {
-    background: #0f172a;
-    border-color: #334155;
+  .header-content h2 i {
+    background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
+    -webkit-background-clip: text;
   }
 
-  .search-box input,
-  .filter-select {
+  .quick-add-form {
     background: #1e293b;
     border-color: #334155;
+  }
+
+  .form-group label {
     color: #e2e8f0;
+  }
+
+  .form-group input,
+  .form-group select,
+  .search-box input,
+  .filter-select {
+    background: #0f172a;
+    border-color: #334155;
+    color: #e2e8f0;
+  }
+
+  .form-group input:focus,
+  .form-group select:focus,
+  .search-box input:focus,
+  .filter-select:focus {
+    border-color: #818cf8;
+  }
+
+  .filters-bar,
+  .student-stats {
+    background: #0f172a;
+    border-color: #334155;
   }
 
   .student-card {
@@ -490,11 +915,6 @@ export default {
     color: #94a3b8;
   }
 
-  .student-stats {
-    background: #0f172a;
-    border-color: #334155;
-  }
-
   .stat-value {
     color: #e2e8f0;
   }
@@ -503,70 +923,96 @@ export default {
     color: #94a3b8;
   }
 
-  .action-btn.view {
+  .cancel-btn {
+    background: #334155;
+    color: #94a3b8;
+  }
+
+  .cancel-btn:hover {
+    background: #475569;
+    color: #e2e8f0;
+  }
+
+  .grade-badge {
     background: rgba(129, 140, 248, 0.1);
     color: #818cf8;
   }
 
-  .action-btn.view:hover {
-    background: rgba(129, 140, 248, 0.15);
+  .grade-badge::before {
+    background: #818cf8;
   }
 
-  .action-btn.edit {
-    background: rgba(250, 204, 21, 0.1);
-    color: #facc15;
+  .status-badge.active {
+    background: rgba(34, 197, 94, 0.1);
+    color: #4ade80;
   }
 
-  .action-btn.edit:hover {
-    background: rgba(250, 204, 21, 0.15);
+  .status-badge.active::before {
+    background: #4ade80;
   }
 
-  .action-btn.delete {
-    background: rgba(248, 113, 113, 0.1);
+  .status-badge.inactive {
+    background: rgba(239, 68, 68, 0.1);
     color: #f87171;
   }
 
-  .action-btn.delete:hover {
-    background: rgba(248, 113, 113, 0.15);
+  .status-badge.inactive::before {
+    background: #f87171;
   }
 }
 
 /* Responsive Design */
 @media (max-width: 1024px) {
   .students-grid {
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   }
-
 }
 
 @media (max-width: 768px) {
-  .section-header {
-    flex-direction: column;
-    gap: 16px;
-    align-items: stretch;
+  .student-management {
+    padding: 20px;
   }
 
-  .add-student-btn {
+  .section-header {
+    flex-direction: column;
+    gap: 20px;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .quick-add-btn {
     width: 100%;
     justify-content: center;
   }
 
   .filters-bar {
     flex-direction: column;
-    padding: 12px;
+    padding: 16px;
   }
 
   .filter-group {
     width: 100%;
+    flex-direction: column;
   }
 
   .filter-select {
-    flex: 1;
-    min-width: 0;
+    width: 100%;
   }
 
   .students-grid {
     grid-template-columns: 1fr;
+  }
+
+  .student-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 16px;
+  }
+
+  .student-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
   .student-stats {
