@@ -4,7 +4,7 @@ import LoginView from '../views/LoginView.vue'
 import AboutView from '../views/AboutView.vue'
 import RegistrationView from '../views/SignupView.vue'
 import TeacherPannel from '../views/TeacherPannel.vue'
-import StudentView from '../views/StudentView.vue'
+import StudentPanel from '../views/StudentPanel.vue'
 import AdminPanel from '../views/AdminPanel.vue'
 import SignupView from '../views/SignupView.vue'
 import FAQView from '../views/FAQView.vue'
@@ -41,7 +41,7 @@ const router = createRouter({
     {
       path: '/student',
       name: 'student',
-      component: StudentView,
+      component: StudentPanel,
     },
     {
       path: '/admin-panel',
