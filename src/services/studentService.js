@@ -101,6 +101,20 @@ const studentService = {
     }
   },
 
+  // Get available quizzes for the student
+  async getAvailableQuizzes() {
+    try {
+      const response = await axios.get(`${API_URL}/student/quizzes`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  },
+
   // Handle API errors
   handleError(error) {
     if (error.response) {
