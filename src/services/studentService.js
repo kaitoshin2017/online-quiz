@@ -45,6 +45,62 @@ const studentService = {
     }
   },
 
+  // Get all quiz results for student
+  async getQuizResults() {
+    try {
+      const response = await axios.get(`${API_URL}/student/results`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  },
+
+  // Submit quiz
+  async submitQuiz(submitData) {
+    try {
+      const response = await axios.post(`${API_URL}/student/submit-quiz`, submitData, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  },
+
+  // Change password
+  async changePassword(passwordData) {
+    try {
+      const response = await axios.post(`${API_URL}/student/change-password`, passwordData, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  },
+
+  // Update avatar
+  async updateAvatar(avatarUrl) {
+    try {
+      const response = await axios.post(`${API_URL}/student/update-avatar`, { avatar: avatarUrl }, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  },
+
   // Handle API errors
   handleError(error) {
     if (error.response) {

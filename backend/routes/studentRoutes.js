@@ -5,6 +5,7 @@ const Quiz = require('../models/Quiz');
 const QuizResult = require('../models/QuizResult');
 const auth = require('../middleware/auth');
 const { body, validationResult } = require('express-validator');
+const studentController = require('../controllers/studentController');
 
 // Validation middleware
 const validateProfileUpdate = [
@@ -18,126 +19,25 @@ const validateProfileUpdate = [
 ];
 
 // Get student profile
-router.get('/profile', auth, async (req, res) => {
-  try {
-    const user = await User.findById(req.user._id)
-      .select('-password -__v')
-      .populate('completedQuizzes', 'title score completedAt');
-    
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    res.json({
-      success: true,
-      data: user
-    });
-  } catch (error) {
-    console.error('Error fetching profile:', error);
-    res.status(500).json({ 
-      success: false,
-      message: 'Error fetching profile',
-      error: error.message 
-    });
-  }
-});
+router.get('/profile', auth, studentController.getProfile);
 
 // Update student profile
-router.put('/profile', auth, validateProfileUpdate, async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ 
-        success: false,
-        errors: errors.array() 
-      });
-    }
-
-    const updates = {};
-    const allowedFields = ['firstName', 'lastName', 'email', 'phone', 'address', 'avatar', 'bio'];
-    
-    // Only update fields that are provided and allowed
-    allowedFields.forEach(field => {
-      if (req.body[field] !== undefined) {
-        updates[field] = req.body[field];
-      }
-    });
-
-    const user = await User.findByIdAndUpdate(
-      req.user._id,
-      { $set: updates },
-      { 
-        new: true,
-        runValidators: true
-      }
-    ).select('-password -__v');
-
-    if (!user) {
-      return res.status(404).json({ 
-        success: false,
-        message: 'User not found' 
-      });
-    }
-
-    res.json({
-      success: true,
-      message: 'Profile updated successfully',
-      data: user
-    });
-  } catch (error) {
-    console.error('Error updating profile:', error);
-    res.status(500).json({ 
-      success: false,
-      message: 'Error updating profile',
-      error: error.message 
-    });
-  }
-});
+router.put('/profile', auth, validateProfileUpdate, studentController.updateProfile);
 
 // Get student dashboard data
-router.get('/dashboard', auth, async (req, res) => {
-  try {
-    // Get available quizzes
-    const availableQuizzes = await Quiz.find({
-      isPublished: true,
-      _id: { $nin: req.user.completedQuizzes }
-    }).select('title description duration totalQuestions');
+router.get('/dashboard', auth, studentController.getDashboard);
 
-    // Get completed quizzes with results
-    const completedQuizzes = await QuizResult.find({ user: req.user._id })
-      .populate('quiz', 'title description')
-      .sort({ completedAt: -1 })
-      .limit(5);
+// Get all quiz results for student
+router.get('/results', auth, studentController.getQuizResults);
 
-    // Calculate statistics
-    const totalQuizzes = await Quiz.countDocuments({ isPublished: true });
-    const completedCount = req.user.completedQuizzes.length;
-    const averageScore = completedQuizzes.length > 0 
-      ? completedQuizzes.reduce((acc, curr) => acc + curr.score, 0) / completedQuizzes.length 
-      : 0;
+// Submit quiz
+router.post('/submit-quiz', auth, studentController.submitQuiz);
 
-    res.json({
-      success: true,
-      data: {
-        availableQuizzes,
-        completedQuizzes,
-        statistics: {
-          totalQuizzes,
-          completedCount,
-          averageScore,
-          progress: totalQuizzes > 0 ? (completedCount / totalQuizzes) * 100 : 0
-        }
-      }
-    });
-  } catch (error) {
-    console.error('Error fetching dashboard:', error);
-    res.status(500).json({ 
-      success: false,
-      message: 'Error fetching dashboard',
-      error: error.message 
-    });
-  }
-});
+// Change password
+router.post('/change-password', auth, studentController.changePassword);
+
+// Update avatar
+router.post('/update-avatar', auth, studentController.updateAvatar);
 
 // Helper function to calculate user rank
 async function calculateRank(userId) {

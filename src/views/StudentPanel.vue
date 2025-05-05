@@ -65,8 +65,8 @@
             <h2>Dashboard Overview</h2>
           </div>
           <div class="stats-grid">
-            <div class="stat-card">
-              <div class="stat-icon">
+            <div class="stat-card gradient-card">
+              <div class="stat-icon gradient-bg">
                 <i class="fas fa-question-circle"></i>
               </div>
               <div class="stat-info">
@@ -74,8 +74,8 @@
                 <p>{{ availableQuizzes.length }}</p>
               </div>
             </div>
-            <div class="stat-card">
-              <div class="stat-icon">
+            <div class="stat-card gradient-card">
+              <div class="stat-icon gradient-bg">
                 <i class="fas fa-chart-bar"></i>
               </div>
               <div class="stat-info">
@@ -83,8 +83,8 @@
                 <p>{{ quizResults.length }}</p>
               </div>
             </div>
-            <div class="stat-card">
-              <div class="stat-icon">
+            <div class="stat-card gradient-card">
+              <div class="stat-icon gradient-bg">
                 <i class="fas fa-star"></i>
               </div>
               <div class="stat-info">
@@ -92,6 +92,9 @@
                 <p>{{ averageScore }}%</p>
               </div>
             </div>
+          </div>
+          <div class="dashboard-chart">
+            <BarChart :data="chartData" :options="chartOptions" style="max-width: 600px; margin: 0 auto;" />
           </div>
         </div>
 
@@ -178,6 +181,7 @@
                 >
                   <i class="fas fa-camera"></i>
                 </button>
+                <div v-if="avatarUploadMessage" class="success-message">{{ avatarUploadMessage }}</div>
               </div>
               <div class="profile-info">
                 <template v-if="!editMode">
@@ -228,6 +232,13 @@
                     </button>
                   </div>
                 </form>
+                <div v-if="editMode" class="change-password-form">
+                  <h4>Change Password</h4>
+                  <input v-model="passwordForm.currentPassword" type="password" placeholder="Current Password">
+                  <input v-model="passwordForm.newPassword" type="password" placeholder="New Password">
+                  <button type="button" @click="changePassword" class="save-btn">Change Password</button>
+                  <div v-if="passwordChangeMessage" class="success-message">{{ passwordChangeMessage }}</div>
+                </div>
               </div>
             </div>
           </div>
@@ -242,11 +253,24 @@ import Logo from '../components/Logo.vue'
 import studentService from '../services/studentService';
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { Bar } from 'vue-chartjs';
+import {
+  Chart,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+} from 'chart.js';
+
+Chart.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 export default {
   name: "StudentPanel",
   components: {
-    Logo
+    Logo,
+    BarChart: Bar
   },
   setup() {
     const router = useRouter();
@@ -275,6 +299,16 @@ export default {
       bio: '',
       avatar: ''
     });
+
+    // Add change password form state
+    const passwordForm = ref({
+      currentPassword: '',
+      newPassword: ''
+    });
+    const passwordChangeMessage = ref('');
+
+    // Add avatar upload state
+    const avatarUploadMessage = ref('');
 
     // Computed properties
     const studentName = computed(() => {
@@ -305,6 +339,53 @@ export default {
     const totalPoints = computed(() => {
       return studentData.value?.statistics?.totalPoints || 0;
     });
+
+    // Chart Data
+    const chartData = computed(() => {
+      const lastResults = quizResults.value.slice(-5);
+      return {
+        labels: lastResults.map(r => r.title),
+        datasets: [
+          {
+            label: 'Quiz Score',
+            backgroundColor: 'rgba(74, 144, 226, 0.7)',
+            borderColor: '#4a90e2',
+            borderWidth: 2,
+            borderRadius: 8,
+            data: lastResults.map(r => r.score)
+          }
+        ]
+      };
+    });
+    const chartOptions = {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        title: {
+          display: true,
+          text: 'Last 5 Quiz Scores',
+          color: '#4a90e2',
+          font: { size: 18, weight: 'bold' }
+        },
+        tooltip: {
+          backgroundColor: '#4a90e2',
+          titleColor: '#fff',
+          bodyColor: '#fff',
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 100,
+          ticks: { color: '#64748b', font: { weight: 'bold' } },
+          grid: { color: 'rgba(74,144,226,0.1)' }
+        },
+        x: {
+          ticks: { color: '#64748b', font: { weight: 'bold' } },
+          grid: { color: 'rgba(74,144,226,0.05)' }
+        }
+      }
+    };
 
     // Methods
     const toggleSidebar = () => {
@@ -390,13 +471,35 @@ export default {
     const handleAvatarChange = async (event) => {
       const file = event.target.files[0];
       if (file) {
-        // Here you would typically upload the file to your server
-        // and get back a URL to use as the avatar
+        // Simulate upload and get base64 URL (in real app, upload to server and get URL)
         const reader = new FileReader();
-        reader.onload = (e) => {
-          profileForm.value.avatar = e.target.result;
+        reader.onload = async (e) => {
+          try {
+            const response = await studentService.updateAvatar(e.target.result);
+            if (response.success) {
+              profileForm.value.avatar = response.avatar;
+              avatarUploadMessage.value = 'Avatar updated!';
+              setTimeout(() => (avatarUploadMessage.value = ''), 2000);
+            }
+          } catch (err) {
+            avatarUploadMessage.value = err.message || 'Failed to update avatar';
+          }
         };
         reader.readAsDataURL(file);
+      }
+    };
+
+    const changePassword = async () => {
+      passwordChangeMessage.value = '';
+      try {
+        const response = await studentService.changePassword(passwordForm.value);
+        if (response.success) {
+          passwordChangeMessage.value = 'Password updated successfully!';
+          passwordForm.value.currentPassword = '';
+          passwordForm.value.newPassword = '';
+        }
+      } catch (err) {
+        passwordChangeMessage.value = err.message || 'Failed to change password';
       }
     };
 
@@ -503,7 +606,13 @@ export default {
       submitQuiz,
       reviewQuiz,
       reviewAnswers,
-      formatTime
+      formatTime,
+      chartData,
+      chartOptions,
+      passwordForm,
+      passwordChangeMessage,
+      changePassword,
+      avatarUploadMessage
     };
   }
 };
@@ -1717,5 +1826,38 @@ section {
 
 .error-message {
   color: #f44336;
+}
+
+/* Add/modify styles for gradient cards and chart */
+.gradient-card {
+  background: linear-gradient(135deg, #e0e7ff 0%, #f0f9ff 100%);
+  box-shadow: 0 4px 24px rgba(74, 144, 226, 0.08);
+  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1), box-shadow 0.3s;
+  animation: fadeInUp 0.7s;
+}
+.gradient-card:hover {
+  transform: translateY(-6px) scale(1.03);
+  box-shadow: 0 8px 32px rgba(74, 144, 226, 0.15);
+}
+.gradient-bg {
+  background: linear-gradient(135deg, #4a90e2 0%, #7b61ff 100%);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(74, 144, 226, 0.15);
+}
+.dashboard-chart {
+  margin-top: 2.5rem;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 2px 12px rgba(74, 144, 226, 0.07);
+  padding: 2rem 1rem 1rem 1rem;
+  animation: fadeIn 1s;
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 </style>
