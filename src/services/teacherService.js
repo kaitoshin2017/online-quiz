@@ -221,6 +221,18 @@ class TeacherService {
     }
   }
 
+  // Delete quiz
+  async deleteQuiz(quizId) {
+    try {
+      const response = await axios.delete(`${API_URL}/quizzes/${quizId}`, {
+        headers: { Authorization: `Bearer ${this.token}` }
+      });
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
   // Error handling
   handleError(error) {
     console.error('API Error:', error);
