@@ -256,6 +256,7 @@ exports.getResults = async (req, res) => {
 exports.createQuiz = async (req, res) => {
   try {
     const { title, description, questions, duration, passingScore } = req.body;
+    
     const quiz = new Quiz({
       title,
       description,
@@ -264,6 +265,7 @@ exports.createQuiz = async (req, res) => {
       passingScore,
       teacher: req.user.id
     });
+
     await quiz.save();
     res.status(201).json({ success: true, quiz });
   } catch (error) {
@@ -276,14 +278,23 @@ exports.createQuiz = async (req, res) => {
 exports.updateQuiz = async (req, res) => {
   try {
     const { title, description, questions, duration, passingScore } = req.body;
+    
     const quiz = await Quiz.findOneAndUpdate(
       { _id: req.params.id, teacher: req.user.id },
-      { title, description, questions, duration, passingScore },
+      { 
+        title,
+        description,
+        questions,
+        duration,
+        passingScore
+      },
       { new: true }
     );
+
     if (!quiz) {
       return res.status(404).json({ success: false, message: 'Quiz not found' });
     }
+
     res.json({ success: true, quiz });
   } catch (error) {
     console.error('Error updating quiz:', error);
@@ -295,6 +306,13 @@ exports.updateQuiz = async (req, res) => {
 exports.addStudent = async (req, res) => {
   try {
     const { firstName, lastName, email, password } = req.body;
+
+    // Check if student already exists
+    const existingStudent = await Student.findOne({ email });
+    if (existingStudent) {
+      return res.status(400).json({ success: false, message: 'Student already exists' });
+    }
+
     const student = new Student({
       firstName,
       lastName,
@@ -302,6 +320,7 @@ exports.addStudent = async (req, res) => {
       password,
       teacher: req.user.id
     });
+
     await student.save();
     res.status(201).json({ success: true, student });
   } catch (error) {
@@ -313,15 +332,23 @@ exports.addStudent = async (req, res) => {
 // Update student
 exports.updateStudent = async (req, res) => {
   try {
-    const { firstName, lastName, email } = req.body;
+    const { firstName, lastName, email, status } = req.body;
+    
     const student = await Student.findOneAndUpdate(
       { _id: req.params.id, teacher: req.user.id },
-      { firstName, lastName, email },
+      { 
+        firstName,
+        lastName,
+        email,
+        status
+      },
       { new: true }
     );
+
     if (!student) {
       return res.status(404).json({ success: false, message: 'Student not found' });
     }
+
     res.json({ success: true, student });
   } catch (error) {
     console.error('Error updating student:', error);
@@ -332,10 +359,18 @@ exports.updateStudent = async (req, res) => {
 // Delete student
 exports.deleteStudent = async (req, res) => {
   try {
-    const student = await Student.findOneAndDelete({ _id: req.params.id, teacher: req.user.id });
+    const student = await Student.findOneAndDelete({ 
+      _id: req.params.id,
+      teacher: req.user.id 
+    });
+
     if (!student) {
       return res.status(404).json({ success: false, message: 'Student not found' });
     }
+
+    // Delete associated quiz results
+    await QuizResult.deleteMany({ student: req.params.id });
+
     res.json({ success: true, message: 'Student deleted successfully' });
   } catch (error) {
     console.error('Error deleting student:', error);
