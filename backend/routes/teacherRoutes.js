@@ -439,8 +439,3 @@ router.delete('/students/:id', auth, async (req, res) => {
     });
   }
 });
-
-// Delete quiz
-router.delete('/quizzes/:quizId', auth, teacherController.deleteQuiz);
-
-module.exports = router; 

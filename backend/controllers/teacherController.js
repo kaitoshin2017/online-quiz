@@ -1,7 +1,7 @@
 const Teacher = require('../models/Teacher');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const Quiz = require('../models/Quiz');
+
 
 // Get teacher profile
 exports.getProfile = async (req, res) => {
@@ -124,17 +124,3 @@ exports.changePassword = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };
-
-// Delete quiz
-exports.deleteQuiz = async (req, res) => {
-  try {
-    const quiz = await Quiz.findByIdAndDelete(req.params.quizId);
-    if (!quiz) {
-      return res.status(404).json({ success: false, message: 'Quiz not found' });
-    }
-    res.json({ success: true, message: 'Quiz deleted successfully' });
-  } catch (error) {
-    console.error('Error deleting quiz:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
-}; 
