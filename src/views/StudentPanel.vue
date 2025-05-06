@@ -314,7 +314,10 @@ export default {
     // Computed properties
     const studentName = computed(() => {
       if (!studentData.value) return '';
-      return `${studentData.value.firstName} ${studentData.value.lastName}`;
+      // Try top-level first, then profile object
+      const firstName = studentData.value.firstName || studentData.value.profile?.firstName || '';
+      const lastName = studentData.value.lastName || studentData.value.profile?.lastName || '';
+      return `${firstName} ${lastName}`.trim();
     });
 
     const studentAvatar = computed(() => {
@@ -429,7 +432,15 @@ export default {
       try {
         const response = await studentService.getAvailableQuizzes();
         if (response?.success) {
-          availableQuizzes.value = response.data || [];
+          availableQuizzes.value = (response.data || []).map(q => ({
+            id: q._id || q.id,
+            title: q.title || 'Untitled Quiz',
+            duration: q.duration || 0,
+            questions: Array.isArray(q.questions) ? q.questions.length : (q.questions || 0),
+            points: q.points || q.totalPoints || 0,
+            description: q.description || '',
+            status: q.status || 'Available'
+          }));
         }
       } catch (err) {
         console.error('Error fetching quizzes:', err);
