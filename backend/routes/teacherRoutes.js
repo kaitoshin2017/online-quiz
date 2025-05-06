@@ -439,3 +439,5 @@ router.delete('/students/:id', auth, async (req, res) => {
     });
   }
 });
+
+module.exports = router;
