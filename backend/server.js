@@ -30,7 +30,7 @@ app.use(limiter);
 
 // CORS configuration
 app.use(cors({
-    origin: 'http://localhost:5174', // Allow frontend on port 5174
+    origin: 'http://localhost:5173', // Allow frontend on port 5173
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
@@ -38,7 +38,7 @@ app.use(cors({
 
 // Handle preflight requests for all routes
 app.options('*', cors({
-    origin: 'http://localhost:5174',
+    origin: 'http://localhost:5173',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
