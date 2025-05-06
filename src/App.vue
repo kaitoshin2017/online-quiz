@@ -4,6 +4,23 @@ export default {
 }
 </script>
 
+<script setup>
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+
+const router = useRouter()
+const authStore = useAuthStore()
+
+const isAuthenticated = computed(() => authStore.isAuthenticated)
+const user = computed(() => authStore.user)
+
+const logout = async () => {
+  await authStore.logout()
+  router.push('/login')
+}
+</script>
+
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Navigation -->
@@ -11,8 +28,7 @@ export default {
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
           <div class="flex">
-        
-            <!-- <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+            <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
               <router-link
                 to="/"
                 class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
@@ -20,18 +36,46 @@ export default {
                 Home
               </router-link>
               <router-link
-                to="/quizzes"
+                to="/about"
                 class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
               >
-                Quizzes
+                About
               </router-link>
               <router-link
-                to="/profile"
+                to="/faq"
                 class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
               >
-                Profile
+                FAQ
               </router-link>
-            </div> -->
+              <template v-if="isAuthenticated">
+                <router-link
+                  to="/profile"
+                  class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                >
+                  Profile
+                </router-link>
+                <button
+                  @click="logout"
+                  class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                >
+                  Logout
+                </button>
+              </template>
+              <template v-else>
+                <router-link
+                  to="/login"
+                  class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                >
+                  Login
+                </router-link>
+                <router-link
+                  to="/signup"
+                  class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+                >
+                  Sign Up
+                </router-link>
+              </template>
+            </div>
           </div>
         </div>
       </div>
@@ -54,23 +98,6 @@ export default {
     </footer>
   </div>
 </template>
-
-<script setup>
-import { computed } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
-
-const router = useRouter()
-const authStore = useAuthStore()
-
-const isAuthenticated = computed(() => authStore.isAuthenticated)
-const user = computed(() => authStore.user)
-
-const logout = async () => {
-  await authStore.logout()
-  router.push('/login')
-}
-</script>
 
 <style>
 @import '@/assets/styles/main.css';
