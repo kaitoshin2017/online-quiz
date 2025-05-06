@@ -10,8 +10,11 @@ const Student = require('../models/Student');
 const teacherController = require('../controllers/teacherController');
 const upload = require('../middleware/upload');
 
+// Apply authentication middleware to all routes
+router.use(auth);
+
 // Get teacher dashboard data
-router.get('/dashboard', auth, async (req, res) => {
+router.get('/dashboard', async (req, res) => {
   try {
     const teacher = await User.findById(req.user._id).select('-password -tokens');
     if (!teacher) {
@@ -89,7 +92,7 @@ router.get('/dashboard', auth, async (req, res) => {
 });
 
 // Get teacher's quizzes
-router.get('/quizzes', auth, async (req, res) => {
+router.get('/quizzes', async (req, res) => {
   try {
     const quizzes = await Quiz.find({ createdBy: req.user._id })
       .select('title description duration totalPoints participants status')
@@ -109,7 +112,7 @@ router.get('/quizzes', auth, async (req, res) => {
 });
 
 // Get teacher's students
-router.get('/students', auth, async (req, res) => {
+router.get('/students', async (req, res) => {
   try {
     const students = await Student.find()
       .select('firstName lastName email quizzesTaken averageScore status')
@@ -129,7 +132,7 @@ router.get('/students', auth, async (req, res) => {
 });
 
 // Get quiz results
-router.get('/results', auth, async (req, res) => {
+router.get('/results', async (req, res) => {
   try {
     const { quizId, timeRange } = req.query;
     const query = { quiz: quizId };
@@ -166,51 +169,10 @@ router.get('/results', auth, async (req, res) => {
 });
 
 // Get teacher profile
-router.get('/profile', auth, async (req, res) => {
-  try {
-    const teacher = await Teacher.findById(req.user._id).select('-password -tokens');
-    if (!teacher) {
-      return res.status(404).json({
-        success: false,
-        message: 'Teacher not found'
-      });
-    }
-
-    // Get teacher's quizzes count
-    const quizzesCount = await Quiz.countDocuments({ createdBy: teacher._id });
-    
-    // Get teacher's students count
-    const studentsCount = await Student.countDocuments({ teacher: teacher._id });
-
-    res.json({
-      success: true,
-      teacher: {
-        id: teacher._id,
-        firstName: teacher.firstName,
-        lastName: teacher.lastName,
-        email: teacher.email,
-        phone: teacher.phone,
-        bio: teacher.bio,
-        avatar: teacher.avatar,
-        role: teacher.role,
-        settings: teacher.settings,
-        statistics: {
-          quizzesCount,
-          studentsCount
-        }
-      }
-    });
-  } catch (error) {
-    console.error('Error fetching teacher profile:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching teacher profile'
-    });
-  }
-});
+router.get('/profile', teacherController.getProfile);
 
 // Update teacher profile
-router.put('/profile', auth, async (req, res) => {
+router.put('/profile', async (req, res) => {
   try {
     const { firstName, lastName, email, phone, bio } = req.body;
     const teacher = await User.findById(req.user._id);
@@ -245,82 +207,28 @@ router.put('/profile', auth, async (req, res) => {
 });
 
 // Get teacher settings
-router.get('/settings', auth, teacherController.getSettings);
+router.get('/settings', teacherController.getSettings);
 
 // Update teacher settings
-router.put('/settings', auth, teacherController.updateSettings);
+router.put('/settings', teacherController.updateSettings);
 
 // Update avatar
-router.post('/avatar', auth, upload.single('avatar'), teacherController.updateAvatar);
+router.post('/avatar', upload.single('avatar'), teacherController.updateAvatar);
 
 // Change password
-router.put('/password', auth, teacherController.changePassword);
+router.put('/password', teacherController.changePassword);
 
 // Create a new quiz
-router.post('/quizzes', auth, async (req, res) => {
-    try {
-        const { title, description, duration, questions } = req.body;
+router.post('/quizzes', teacherController.createQuiz);
 
-        // Validate required fields
-        if (!title || !questions || !Array.isArray(questions) || questions.length === 0) {
-            return res.status(400).json({
-                success: false,
-                message: 'Title and at least one question are required'
-            });
-        }
+// Update a quiz
+router.put('/quizzes/:id', teacherController.updateQuiz);
 
-        // Validate each question
-        for (const question of questions) {
-            if (!question.text || !question.options || !Array.isArray(question.options) || 
-                question.options.length < 2 || question.correctAnswer === undefined || 
-                question.points === undefined) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Each question must have text, at least two options, a correct answer, and points'
-                });
-            }
-        }
-
-        // Calculate total points
-        const totalPoints = questions.reduce((sum, question) => sum + question.points, 0);
-
-        // Create new quiz
-        const quiz = new Quiz({
-            title,
-            description: description || '',
-            duration: duration || 30, // Default duration of 30 minutes
-            questions,
-            totalPoints,
-            createdBy: req.user.id,
-            status: 'published'
-        });
-
-        await quiz.save();
-
-        res.status(201).json({
-            success: true,
-            quiz: {
-                id: quiz._id,
-                title: quiz.title,
-                description: quiz.description,
-                duration: quiz.duration,
-                totalPoints: quiz.totalPoints,
-                status: quiz.status,
-                createdAt: quiz.createdAt
-            }
-        });
-    } catch (error) {
-        console.error('Error creating quiz:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error creating quiz',
-            error: error.message
-        });
-    }
-});
+// Delete a quiz
+router.delete('/quizzes/:id', teacherController.deleteQuiz);
 
 // Add new student
-router.post('/students', auth, async (req, res) => {
+router.post('/students', async (req, res) => {
   try {
     const { firstName, lastName, email, password, phone } = req.body;
 
@@ -375,7 +283,7 @@ router.post('/students', auth, async (req, res) => {
 });
 
 // Update student
-router.put('/students/:id', auth, async (req, res) => {
+router.put('/students/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
@@ -415,7 +323,7 @@ router.put('/students/:id', auth, async (req, res) => {
 });
 
 // Delete student
-router.delete('/students/:id', auth, async (req, res) => {
+router.delete('/students/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const student = await Student.findByIdAndDelete(id);
