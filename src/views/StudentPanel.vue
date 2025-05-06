@@ -241,6 +241,9 @@
         </section>
       </div>
     </div>
+    <button class="logout-btn" @click="logout">
+      <i class="fas fa-sign-out-alt"></i> Logout
+    </button>
   </div>
 </template>
 
@@ -259,6 +262,7 @@ import {
   Tooltip,
   Legend
 } from 'chart.js';
+import { useAuthStore } from '@/stores/auth'
 
 Chart.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -270,6 +274,7 @@ export default {
   },
   setup() {
     const router = useRouter();
+    const authStore = useAuthStore();
     const isSidebarOpen = ref(false);
     const activeTab = ref('quizzes');
     const searchQuery = ref('');
@@ -560,6 +565,11 @@ export default {
       return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
     };
 
+    const logout = async () => {
+      await authStore.logout();
+      router.push('/login');
+    };
+
     // Lifecycle hooks
     onMounted(() => {
       fetchStudentData();
@@ -608,7 +618,8 @@ export default {
       passwordForm,
       passwordChangeMessage,
       changePassword,
-      avatarUploadMessage
+      avatarUploadMessage,
+      logout
     };
   }
 };
@@ -1855,5 +1866,20 @@ section {
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+.logout-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  margin-left: 1rem;
+}
+.logout-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
 }
 </style>

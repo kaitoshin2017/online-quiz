@@ -557,6 +557,10 @@
         </div>
       </div>
     </div>
+
+    <button class="logout-btn" @click="logout">
+      <i class="fas fa-sign-out-alt"></i> Logout
+    </button>
   </div>
 </template>
 
@@ -565,6 +569,7 @@ import Logo from '../components/Logo.vue'
 import teacherService from '@/services/teacherService';
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/auth'
 
 export default {
   name: 'TeacherPanel',
@@ -573,6 +578,7 @@ export default {
   },
   setup() {
     const router = useRouter();
+    const authStore = useAuthStore();
     const activeTab = ref('dashboard');
     const searchQuery = ref('');
     const teacherName = ref('');
@@ -763,9 +769,9 @@ export default {
     };
 
     // Handle logout
-    const logout = () => {
-      teacherService.setAuthToken(null);
-      // Redirect to login page or emit logout event
+    const logout = async () => {
+      await authStore.logout();
+      router.push('/login');
     };
 
     // Quiz methods
@@ -2379,5 +2385,20 @@ input:checked + .toggle-slider:before {
 .save-btn:disabled {
   background: #cccccc;
   cursor: not-allowed;
+}
+
+.logout-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  margin-left: 1rem;
+}
+.logout-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
 }
 </style>
