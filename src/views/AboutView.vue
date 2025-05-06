@@ -72,22 +72,22 @@
                 <div class="member-avatar">
                   <i class="fas fa-user-circle"></i>
                 </div>
-                <h3>John Doe</h3>
-                <p>Founder & CEO</p>
+                <h3>Shin Igna</h3>
+                <p>Founder & Lead Developer</p>
               </div>
               <div class="team-member">
                 <div class="member-avatar">
                   <i class="fas fa-user-circle"></i>
                 </div>
-                <h3>Jane Smith</h3>
+                <h3>Gena/kyla</h3>
                 <p>Head of Education</p>
               </div>
               <div class="team-member">
                 <div class="member-avatar">
                   <i class="fas fa-user-circle"></i>
                 </div>
-                <h3>Mike Johnson</h3>
-                <p>Lead Developer</p>
+                <h3>warren/topher</h3>
+                <p>driver</p>
               </div>
             </div>
           </div>
