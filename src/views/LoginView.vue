@@ -146,10 +146,11 @@ export default {
           formData.value.role
         )
         
-        // Redirect based on user role
-        if (formData.value.role === 'teacher') {
+        // Redirect based on user role from response, not form
+        const userRole = response.user?.role || formData.value.role;
+        if (userRole === 'teacher') {
           router.push('/teacher-panel')
-        } else if (formData.value.role === 'admin') {
+        } else if (userRole === 'admin') {
           router.push('/admin-panel')
         } else {
           router.push('/student')
