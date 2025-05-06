@@ -28,9 +28,15 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// CORS configuration
+// Improved CORS configuration for development
 app.use(cors({
-    origin: 'http://localhost:5173', // Allow frontend on port 5173
+    origin: function(origin, callback) {
+        if (!origin || origin.startsWith('http://localhost:')) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
@@ -38,7 +44,13 @@ app.use(cors({
 
 // Handle preflight requests for all routes
 app.options('*', cors({
-    origin: 'http://localhost:5173',
+    origin: function(origin, callback) {
+        if (!origin || origin.startsWith('http://localhost:')) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
