@@ -6,10 +6,12 @@
         <div class="logo">
           <Logo />
         </div>
-        <ul>
-          <li><router-link to="/">Home</router-link></li>
-          <li><router-link to="/login" class="active">Login</router-link></li>
-          <li><router-link to="/signup">Sign Up</router-link></li>
+        <ul class="desktop-nav">
+          <li><router-link to="/"><i class="fas fa-home"></i> Home</router-link></li>
+          <li><router-link to="/about"><i class="fas fa-info-circle"></i> About</router-link></li>
+          <li><router-link to="/faq"><i class="fas fa-question-circle"></i> FAQ</router-link></li>
+          <li><router-link to="/login" class="login-btn active"><i class="fas fa-sign-in-alt"></i> Login</router-link></li>
+          <li><router-link to="/signup" class="signup-btn"><i class="fas fa-user-plus"></i> Sign Up</router-link></li>
         </ul>
       </nav>
     </header>
@@ -231,11 +233,41 @@ nav ul li a {
   padding: 8px 15px;
   border-radius: 8px;
   transition: all 0.3s ease;
+  position: relative;
+  font-weight: 500;
 }
 
-nav ul li a:hover, nav ul li a.active {
+nav ul li a::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(to right, #4a90e2, #7b61ff);
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+}
+
+nav ul li a:hover::after {
+  width: 80%;
+}
+
+nav ul li a:hover {
   color: #4a90e2;
-  background: rgba(74, 144, 226, 0.1);
+}
+
+nav ul li a.active {
+  color: #4a90e2;
+}
+
+nav ul li a.active::after {
+  width: 80%;
+}
+
+nav ul li a i {
+  margin-right: 8px;
+  font-size: 1.1rem;
 }
 
 /* Main Content Styles */

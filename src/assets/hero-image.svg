@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="600" viewBox="0 0 800 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Elements -->
+  <circle cx="400" cy="300" r="250" fill="#E3F2FD" opacity="0.5"/>
+  <circle cx="400" cy="300" r="200" fill="#4A90E2" opacity="0.1"/>
+  
+  <!-- Quiz Elements -->
+  <rect x="250" y="200" width="300" height="200" rx="20" fill="white" stroke="#4A90E2" stroke-width="4"/>
+  <circle cx="400" cy="300" r="80" fill="#7B61FF" opacity="0.2"/>
+  
+  <!-- Question Mark -->
+  <text x="400" y="320" font-family="Arial" font-size="120" font-weight="bold" fill="#4A90E2" text-anchor="middle">?</text>
+  
+  <!-- Decorative Elements -->
+  <circle cx="200" cy="150" r="30" fill="#4A90E2" opacity="0.2"/>
+  <circle cx="600" cy="450" r="40" fill="#7B61FF" opacity="0.2"/>
+  <circle cx="500" cy="100" r="25" fill="#4A90E2" opacity="0.2"/>
+  <circle cx="300" cy="500" r="35" fill="#7B61FF" opacity="0.2"/>
+  
+  <!-- Connection Lines -->
+  <path d="M200 150 L400 300" stroke="#4A90E2" stroke-width="2" opacity="0.3"/>
+  <path d="M600 450 L400 300" stroke="#7B61FF" stroke-width="2" opacity="0.3"/>
+  <path d="M500 100 L400 300" stroke="#4A90E2" stroke-width="2" opacity="0.3"/>
+  <path d="M300 500 L400 300" stroke="#7B61FF" stroke-width="2" opacity="0.3"/>
+</svg> 

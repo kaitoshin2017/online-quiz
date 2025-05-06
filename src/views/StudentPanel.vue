@@ -6,10 +6,6 @@
       </div>
       <nav>
         <ul>
-          <li @click="navigateToHome" :class="{ active: currentPath === '/' }">
-            <i class="fas fa-home"></i>
-            <span>Home</span>
-          </li>
           <li @click="activeTab = 'dashboard'" :class="{ active: activeTab === 'dashboard' }">
             <i class="fas fa-tachometer-alt"></i>
             <span>Dashboard</span>
