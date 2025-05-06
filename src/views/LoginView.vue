@@ -151,13 +151,15 @@ export default {
         console.log('User role:', response.user?.role);
         // Redirect based on user role from response, not form
         const userRole = response.user?.role || formData.value.role;
-        if (userRole === 'teacher') {
-          router.push('/teacher-panel')
-        } else if (userRole === 'admin') {
-          router.push('/admin-panel')
-        } else {
-          router.push('/student')
-        }
+        setTimeout(() => {
+          if (userRole === 'teacher') {
+            router.push('/teacher-panel')
+          } else if (userRole === 'admin') {
+            router.push('/admin-panel')
+          } else {
+            router.push('/student')
+          }
+        }, 100);
       } catch (err) {
         console.error('Login error:', err);
         error.value = err.message || 'Login failed. Please try again.'
