@@ -146,6 +146,9 @@ export default {
           formData.value.role
         )
         
+        // Debug: log the response and user role
+        console.log('Login response:', response);
+        console.log('User role:', response.user?.role);
         // Redirect based on user role from response, not form
         const userRole = response.user?.role || formData.value.role;
         if (userRole === 'teacher') {
