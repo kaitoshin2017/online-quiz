@@ -45,7 +45,7 @@ app.use((err, req, res, next) => {
 });
 
 // MongoDB Connection
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/quiz-app';
+const MONGODB_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/quiz-app';
 
 mongoose.connect(MONGODB_URI, {
     useNewUrlParser: true,
@@ -56,7 +56,7 @@ mongoose.connect(MONGODB_URI, {
 .then(() => {
     console.log('Connected to MongoDB');
     // Start the server only after MongoDB connection is established
-    const PORT = 3000; // Fixed port 3000
+    const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
         console.log(`Server is running on port ${PORT}`);
     });
