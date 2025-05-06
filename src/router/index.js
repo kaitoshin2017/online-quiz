@@ -9,6 +9,7 @@ import AdminPanel from '../views/AdminPanel.vue'
 import SignupView from '../views/SignupView.vue'
 import FAQView from '../views/FAQView.vue'
 import QuizEditor from '../components/QuizEditor.vue'
+import { useAuthStore } from '../stores/auth'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -85,5 +86,27 @@ const router = createRouter({
     },
   ],
 })
+
+// Define which routes require authentication
+const protectedRoutes = [
+  'teacher-panel',
+  'student',
+  'admin-panel',
+  'my-quizzes',
+  'quiz-edit',
+  'take-quiz',
+  'results',
+  'profile',
+  'review-quiz'
+]
+
+router.beforeEach((to, from, next) => {
+  const authStore = useAuthStore();
+  if (protectedRoutes.includes(to.name) && !authStore.isAuthenticated) {
+    next('/login');
+  } else {
+    next();
+  }
+});
 
 export default router
