@@ -39,6 +39,16 @@ router.post('/change-password', auth, studentController.changePassword);
 // Update avatar
 router.post('/update-avatar', auth, studentController.updateAvatar);
 
+// Get all available quizzes for students
+router.get('/quizzes', auth, async (req, res) => {
+  try {
+    const quizzes = await Quiz.find({ isPublished: true });
+    res.json({ success: true, quizzes });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 // Helper function to calculate user rank
 async function calculateRank(userId) {
   const users = await User.find().sort({ totalPoints: -1 });
