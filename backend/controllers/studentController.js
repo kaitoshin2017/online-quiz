@@ -57,9 +57,11 @@ exports.getDashboard = async (req, res) => {
     const averageScore = completedQuizzes.length > 0
       ? completedQuizzes.reduce((acc, curr) => acc + curr.score, 0) / completedQuizzes.length
       : 0;
+    const user = await User.findById(req.user._id).select('firstName lastName avatar email');
     res.json({
       success: true,
       data: {
+        profile: user,
         availableQuizzes,
         completedQuizzes,
         statistics: {

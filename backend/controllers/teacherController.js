@@ -9,8 +9,25 @@ const QuizResult = require('../models/QuizResult');
 // Get teacher dashboard data
 exports.getDashboard = async (req, res) => {
   try {
-    // Implement logic to get dashboard data
-    res.json({ success: true, message: 'Dashboard data' });
+    const teacher = await Teacher.findById(req.user.id);
+    if (!teacher) {
+      return res.status(404).json({ success: false, message: 'Teacher not found' });
+    }
+
+    const totalQuizzes = await Quiz.countDocuments({ teacher: req.user.id });
+    const totalStudents = await Student.countDocuments({ teacher: req.user.id });
+    const recentQuizzes = await Quiz.find({ teacher: req.user.id })
+      .sort({ createdAt: -1 })
+      .limit(5);
+
+    res.json({
+      success: true,
+      data: {
+        totalQuizzes,
+        totalStudents,
+        recentQuizzes
+      }
+    });
   } catch (error) {
     console.error('Error getting dashboard:', error);
     res.status(500).json({ success: false, message: 'Server error' });
@@ -20,8 +37,9 @@ exports.getDashboard = async (req, res) => {
 // Get teacher quizzes
 exports.getQuizzes = async (req, res) => {
   try {
-    // Implement logic to get teacher quizzes
-    res.json({ success: true, quizzes: [] });
+    const quizzes = await Quiz.find({ teacher: req.user.id })
+      .sort({ createdAt: -1 });
+    res.json({ success: true, quizzes });
   } catch (error) {
     console.error('Error getting quizzes:', error);
     res.status(500).json({ success: false, message: 'Server error' });
@@ -31,8 +49,9 @@ exports.getQuizzes = async (req, res) => {
 // Get teacher students
 exports.getStudents = async (req, res) => {
   try {
-    // Implement logic to get teacher students
-    res.json({ success: true, students: [] });
+    const students = await Student.find({ teacher: req.user.id })
+      .sort({ createdAt: -1 });
+    res.json({ success: true, students });
   } catch (error) {
     console.error('Error getting students:', error);
     res.status(500).json({ success: false, message: 'Server error' });
@@ -42,8 +61,11 @@ exports.getStudents = async (req, res) => {
 // Get teacher quiz results
 exports.getResults = async (req, res) => {
   try {
-    // Implement logic to get quiz results
-    res.json({ success: true, results: [] });
+    const results = await QuizResult.find({ teacher: req.user.id })
+      .populate('student', 'firstName lastName')
+      .populate('quiz', 'title')
+      .sort({ createdAt: -1 });
+    res.json({ success: true, results });
   } catch (error) {
     console.error('Error getting results:', error);
     res.status(500).json({ success: false, message: 'Server error' });

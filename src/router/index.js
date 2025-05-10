@@ -101,8 +101,10 @@ const protectedRoutes = [
 ]
 
 router.beforeEach((to, from, next) => {
-  const authStore = useAuthStore();
-  if (protectedRoutes.includes(to.name) && !authStore.isAuthenticated) {
+  // const authStore = useAuthStore();
+  // Check token in localStorage instead of authStore
+  const token = localStorage.getItem('token');
+  if (protectedRoutes.includes(to.name) && !token) {
     next('/login');
   } else {
     next();
